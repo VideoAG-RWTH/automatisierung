@@ -49,6 +49,7 @@ class VideoagServer(socketserver.StreamRequestHandler):
             fobj.close()
             os.utime(realname, times=(time.time(),float(mtime)))
             md5 = r.getmd5()
+            #print(md5)
             sendans(self.wfile,{"status":"ok", "md5":md5})
             com = recvcom(self.rfile)
             if com["status"] != "ok":
@@ -76,7 +77,7 @@ class readmd5(object):
 def readconfig(name):
     global CHUNKSIZE, DB, HOST, PORT
     fobj = open(name, "r")
-    conf = fobj.readall()
+    conf = fobj.read()
     fobj.close()
     exec(conf)
  

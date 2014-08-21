@@ -7,7 +7,7 @@ import struct
 import binascii
 import hashlib
 import base64
-import telnetlib
+import socket
 
 
 CHUNKSIZE = 8192
@@ -23,9 +23,10 @@ def upload(filename, event, date, host, port, token):
     
     #print(jsonobj)
     
-    t = telnetlib.Telnet(host, port)
-    t.write(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
-    ans = json.loads(str(t.read_until(b"\n"), encoding='utf-8', errors='strict'))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host,port))
+    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
+    ans = json.loads(str(readline(s), encoding='utf-8', errors='strict'))
     if ans["status"] != "ok":
         raise Exception
     reader = readmd5(fobj)
@@ -33,18 +34,27 @@ def upload(filename, event, date, host, port, token):
     while read >= CHUNKSIZE:
         data = reader.read(CHUNKSIZE)
         read = len(data)
-        t.write(data)
+        s.sendall(data)
     fobj.close()
     md5 = reader.getmd5()
-    ans = json.loads(str(t.read_until(b"\n"), encoding='utf-8', errors='strict'))
+    #print(md5)
+    ans = json.loads(str(readline(s), encoding='utf-8', errors='strict'))
     if ans["status"] != "ok":
         raise Exception
     if ans["md5"] != md5:
         jsonobj = json.dumps({"status":"bad"})
     else:
         jsonobj = json.dumps({"status":"ok"})
-    t.write(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
+    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
 
+def readline(s):
+    recv = b""
+    data = b""
+    
+    while recv != b"\n":
+        data += recv
+        recv = s.recv(1)
+    return data
 
 def getfilesize(fobj):
     fobj.seek(0, os.SEEK_END)
