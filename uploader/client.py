@@ -36,11 +36,8 @@ def upload(filename, event, date, host, port, token):
     fobj.close()
     md5 = reader.getmd5()
     #print(md5)
+    jsonobj = json.dumps({"status":"ok", "md5":md5})
+    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
     ans = json.loads(str(comlib.readline(s), encoding='utf-8', errors='strict'))
     if ans["status"] != "ok":
         raise Exception
-    if ans["md5"] != md5:
-        jsonobj = json.dumps({"status":"bad"})
-    else:
-        jsonobj = json.dumps({"status":"ok"})
-    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')

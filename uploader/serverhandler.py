@@ -29,7 +29,9 @@ def uphandle(rfile, wfile, com, chunksize):
     os.utime(realname, times=(time.time(),float(mtime)))
     md5 = r.getmd5()
     #print(md5)
-    comlib.sendans(wfile,{"status":"ok", "md5":md5})
     com = comlib.recvcom(rfile)
-    if com["status"] != "ok":
+    if com["md5"] != md5:
+        comlib.sendans(wfile,{"status":"bad"})
         raise Exception
+    else:
+        comlib.sendans(wfile,{"status":"ok"})
