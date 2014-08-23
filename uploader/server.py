@@ -11,22 +11,22 @@ DB = ""
 HOST = "localhost"
 PORT = 9999
 
-class VideoagServer(socketserver.StreamRequestHandler):
+class VideoagServer(socketserver.BaseRequestHandler):
     def handle(self):
         try:
-            com = comlib.recvcom(self.rfile)
+            com = comlib.recvcom(self.request)
         except ValueError:
-            comlib.sendans(self.wfile,{"status":"no json"})
+            comlib.sendans(self.request,{"status":"no json"})
             return
         try:
             if com["token"] not in ["moritz", "videoag"]:
-                comlib.sendans(self.wfile,{"status":"no permission"})
+                comlib.sendans(self.request,{"status":"no permission"})
                 return
         except KeyError:
-            comlib.sendans(self.wfile,{"status":"no token"})
+            comlib.sendans(self.request,{"status":"no token"})
             return
         if com["request"] == "upload":
-            serverhandler.uphandle(self.rfile, self.wfile, com, CHUNKSIZE)
+            serverhandler.uphandle(self.request, com, CHUNKSIZE)
  
 def readconfig(name):
     global CHUNKSIZE, DB, HOST, PORT

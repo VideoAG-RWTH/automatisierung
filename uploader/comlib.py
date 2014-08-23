@@ -3,11 +3,11 @@
 
 import json
 
-def sendans(fobj, nojson):
-    fobj.write(bytes(json.dumps(nojson), encoding='utf-8', errors='strict')+b'\n')
+def sendans(socket, nojson):
+    socket.sendall(bytes(json.dumps(nojson), encoding='utf-8', errors='strict')+b'\n')
     
-def recvcom(fobj):
-    return json.loads(str(fobj.readline().strip(), encoding='utf-8', errors='strict'))
+def recvcom(socket):
+    return json.loads(str(readline(socket).strip(), encoding='utf-8', errors='strict'))
     
 def readline(s):
     recv = b""
@@ -17,3 +17,9 @@ def readline(s):
         data += recv
         recv = s.recv(1)
     return data
+
+class readsock(object):
+    def __init__(self, s):
+        self.s = s
+    def read(self, size):
+        return self.s.recv(size)

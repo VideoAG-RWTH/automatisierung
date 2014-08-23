@@ -6,7 +6,7 @@ import time
 import filelib
 import comlib
 
-def uphandle(rfile, wfile, com, chunksize):
+def uphandle(socket, com, chunksize):
     filename = com["filename"]
     date = com["date"]
     mtime = com["mtime"]
@@ -14,9 +14,10 @@ def uphandle(rfile, wfile, com, chunksize):
     uuhash = com["uuhash"]
     size = int(com["size"])
     
-    comlib.sendans(wfile,{"status":"ok"})
+    comlib.sendans(socket,{"status":"ok"})
     
-    r = filelib.readmd5(rfile)
+    fs = comlib.readsock(socket)
+    r = filelib.readmd5(fs)
     print(uuhash)
     realname = event+"-"+date+"-"+filename
     fobj = open(realname,"wb")
@@ -29,9 +30,9 @@ def uphandle(rfile, wfile, com, chunksize):
     os.utime(realname, times=(time.time(),float(mtime)))
     md5 = r.getmd5()
     #print(md5)
-    com = comlib.recvcom(rfile)
+    com = comlib.recvcom(socket)
     if com["md5"] != md5:
-        comlib.sendans(wfile,{"status":"bad"})
+        comlib.sendans(socket,{"status":"bad"})
         raise Exception
     else:
-        comlib.sendans(wfile,{"status":"ok"})
+        comlib.sendans(socket,{"status":"ok"})

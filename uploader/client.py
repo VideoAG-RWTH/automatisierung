@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
 import os
 import socket
 import comlib
@@ -16,15 +15,24 @@ def upload(filename, event, date, host, port, token):
     uuhash = filelib.uuhash(fobj)
     filesize = str(filelib.getfilesize(fobj))
     mtime = str(os.stat(filename).st_mtime)
-    
-    jsonobj = json.dumps({"size":filesize, "uuhash":uuhash, "event":event, "mtime":mtime, "date":date, "request":"upload", "filename": filename, "token":token})
+
     
     #print(jsonobj)
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host,port))
-    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
-    ans = json.loads(str(comlib.readline(s), encoding='utf-8', errors='strict'))
+    comlib.sendans(s,
+        {
+            "size"      :   filesize, 
+            "uuhash"    :   uuhash, 
+            "event"     :   event, 
+            "mtime"     :   mtime, 
+            "date"      :   date, 
+            "request"   :   "upload", 
+            "filename"  :   filename, 
+            "token"     :   token
+        })
+    ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
     reader = filelib.readmd5(fobj)
@@ -36,8 +44,7 @@ def upload(filename, event, date, host, port, token):
     fobj.close()
     md5 = reader.getmd5()
     #print(md5)
-    jsonobj = json.dumps({"status":"ok", "md5":md5})
-    s.sendall(bytes(jsonobj, encoding='utf-8', errors='strict')+b'\n')
-    ans = json.loads(str(comlib.readline(s), encoding='utf-8', errors='strict'))
+    comlib.sendans(s, {"status":"ok", "md5":md5})
+    ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
