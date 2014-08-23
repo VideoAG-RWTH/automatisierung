@@ -5,9 +5,10 @@ import os
 import socket
 import comlib
 import filelib
+import sys
 
 
-CHUNKSIZE = 8192
+CONFIG={}
 
 
 def upload(filename, event, date, host, port, token):
@@ -36,9 +37,9 @@ def upload(filename, event, date, host, port, token):
     if ans["status"] != "ok":
         raise Exception
     reader = filelib.readmd5(fobj)
-    read = CHUNKSIZE
-    while read >= CHUNKSIZE:
-        data = reader.read(CHUNKSIZE)
+    read = CONFIG["chunksize"]
+    while read >= CONFIG["chunksize"]:
+        data = reader.read(CONFIG["chunksize"])
         read = len(data)
         s.sendall(data)
     fobj.close()
@@ -48,3 +49,14 @@ def upload(filename, event, date, host, port, token):
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
+
+def readconfig(name):
+    global CONFIG
+    fobj = open(name, "r")
+    conf = fobj.read()
+    fobj.close()
+    CONFIG=eval(conf)
+    
+if __name__ == "__main__":
+    readconfig(sys.argv[1])
+    upload(sys.argv[2], sys.argv[3], sys.argv[4], CONFIG["host"], CONFIG["port"], CONFIG["token"])

@@ -6,7 +6,7 @@ import time
 import filelib
 import comlib
 
-def uphandle(socket, com, chunksize):
+def uphandle(socket, com, config):
     filename = com["filename"]
     date = com["date"]
     mtime = com["mtime"]
@@ -22,9 +22,9 @@ def uphandle(socket, com, chunksize):
     realname = event+"-"+date+"-"+filename
     fobj = open(realname,"wb")
     
-    while size > chunksize:
-        fobj.write(r.read(chunksize))
-        size-=chunksize
+    while size > config["chunksize"]:
+        fobj.write(r.read(config["chunksize"]))
+        size-=config["chunksize"]
     fobj.write(r.read(size))
     fobj.close()
     os.utime(realname, times=(time.time(),float(mtime)))

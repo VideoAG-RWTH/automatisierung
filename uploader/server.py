@@ -6,10 +6,7 @@ import sys
 import serverhandler
 import comlib
 
-CHUNKSIZE = 8192
-DB = ""
-HOST = "localhost"
-PORT = 9999
+CONFIG={}
 
 class VideoagServer(socketserver.BaseRequestHandler):
     def handle(self):
@@ -26,17 +23,17 @@ class VideoagServer(socketserver.BaseRequestHandler):
             comlib.sendans(self.request,{"status":"no token"})
             return
         if com["request"] == "upload":
-            serverhandler.uphandle(self.request, com, CHUNKSIZE)
+            serverhandler.uphandle(self.request, com, CONFIG)
  
 def readconfig(name):
-    global CHUNKSIZE, DB, HOST, PORT
+    global CONFIG
     fobj = open(name, "r")
     conf = fobj.read()
     fobj.close()
-    exec(conf)
+    CONFIG=eval(conf)
  
 if __name__ == "__main__":
     readconfig(sys.argv[1])
-    server = socketserver.TCPServer((HOST, PORT), VideoagServer)
+    server = socketserver.TCPServer((CONFIG["host"], CONFIG["port"]), VideoagServer)
     server.serve_forever()
 #    server.handle_request()
