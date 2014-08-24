@@ -7,19 +7,6 @@ import binascii
 import base64
 import os
 
-class readmd5(object):
-	def __init__(self,fobj):
-		self.fobj = fobj
-		self.md5 = hashlib.md5()
-	
-	def read(self,size):
-		data = self.fobj.read(size)
-		self.md5.update(data)
-		return data
-
-	def getmd5(self):
-		return self.md5.hexdigest()
-
 def getfilesize(fobj):
     fobj.seek(0, os.SEEK_END)
     filesize = fobj.tell()

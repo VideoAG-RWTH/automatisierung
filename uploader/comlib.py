@@ -17,9 +17,3 @@ def readline(s):
         data += recv
         recv = s.recv(1)
     return data
-
-class readsock(object):
-    def __init__(self, s):
-        self.s = s
-    def read(self, size):
-        return self.s.recv(size)

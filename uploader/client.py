@@ -6,6 +6,7 @@ import socket
 import comlib
 import filelib
 import sys
+import hashlib
 
 
 CONFIG={}
@@ -36,15 +37,15 @@ def upload(filename, event, date, host, port, token):
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
-    reader = filelib.readmd5(fobj)
-    read = CONFIG["chunksize"]
-    while read >= CONFIG["chunksize"]:
-        data = reader.read(CONFIG["chunksize"])
+    hasher = hashlib.md5()
+    read = 1
+    while read > 0:
+        data = fobj.read(CONFIG["chunksize"])
         read = len(data)
+        hasher.update(data)
         s.sendall(data)
     fobj.close()
-    md5 = reader.getmd5()
-    #print(md5)
+    md5 = hasher.hexdigest()
     comlib.sendans(s, {"status":"ok", "md5":md5})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":

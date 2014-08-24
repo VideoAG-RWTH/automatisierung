@@ -3,8 +3,8 @@
 
 import os
 import time
-import filelib
 import comlib
+import hashlib
 
 def uphandle(socket, com, config):
     filename = com["filename"]
@@ -16,20 +16,25 @@ def uphandle(socket, com, config):
     
     comlib.sendans(socket,{"status":"ok"})
     
-    fs = comlib.readsock(socket)
-    r = filelib.readmd5(fs)
     print(uuhash)
     realname = event+"-"+date+"-"+filename
-    fobj = open(realname,"wb")
     
-    while size > config["chunksize"]:
-        fobj.write(r.read(config["chunksize"]))
-        size-=config["chunksize"]
-    fobj.write(r.read(size))
+    fobj = open(realname,"wb")
+    hasher = hashlib.md5()
+    read = 1
+    while size > 0:
+        if size < config["chunksize"]:
+            toread = size
+        else:
+            toread = config["chunksize"]
+        data = socket.recv(toread)
+        read = len(data)
+        hasher.update(data)
+        fobj.write(data)
+        size-=read
     fobj.close()
     os.utime(realname, times=(time.time(),float(mtime)))
-    md5 = r.getmd5()
-    #print(md5)
+    md5 = hasher.hexdigest()
     com = comlib.recvcom(socket)
     if com["md5"] != md5:
         comlib.sendans(socket,{"status":"bad"})
