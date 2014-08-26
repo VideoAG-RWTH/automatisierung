@@ -5,19 +5,22 @@ import os
 import time
 import comlib
 import hashlib
+import dblib
 
 def uphandle(socket, config):
     com = comlib.recvcom(socket)
     try:
         id = com["id"]
     except KeyError as err:
-            comlib.sendcom(socket,{"status":"no key '" + format(err) + "'"})
+            comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
             return
     
     comlib.sendcom(socket,{"status":"ok"})
     
-    print(uuhash)
-    realname = event+"-"+date+"-"+filename
+    realname = dblib.getfilename(id, config)
+    prop = dblib.getfileprop(id, config)
+    size = prop["size"]
+    mtime = prop["mtime"]
     
     fobj = open(realname,"wb")
     hasher = hashlib.md5()
@@ -41,6 +44,7 @@ def uphandle(socket, config):
         raise Exception
     else:
         comlib.sendcom(socket,{"status":"ok"})
+    dblib.updatefile(id, "md5", md5)
 
 def indexhandle(socket, config):
     com = comlib.recvcom(socket)
@@ -52,5 +56,12 @@ def indexhandle(socket, config):
         uuhash = com["uuhash"]
         size = int(com["size"])
     except KeyError as err:
-            comlib.sendcom(socket,{"status":"no key '" + format(err) + "'"})
-            return
+        comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
+        return
+    
+    status = "ok"
+    try:
+        dblib.indexfile(filename, uuhash, size, mtime, event, date)
+    except Exception:
+        status = "bad"
+    comlib.sendcom(socket, {"status": status})
