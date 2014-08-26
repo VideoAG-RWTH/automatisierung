@@ -11,7 +11,7 @@ def recvcom(socket):
         return json.loads(str(readline(socket).strip(), encoding='utf-8', errors='strict'))
     except ValueError:
         sendcom(socket, {"status":"no json"})
-        raise ValueError  
+        raise ValueError
 
 def readline(s):
     recv = b""

@@ -8,25 +8,18 @@ import filelib
 import sys
 import hashlib
 
-
-CONFIG={}
-
-
-def upload(filename, event, date, host, port, token):
+def index(filename, event, date, config):
     fobj = open(filename, "rb")
     uuhash = filelib.uuhash(fobj)
     filesize = str(filelib.getfilesize(fobj))
     mtime = str(os.stat(filename).st_mtime)
-
-    
-    #print(jsonobj)
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host,port))
+    s.connect((config["host"],config["port"]))
     comlib.sendcom(s,
         {
-            "request"   :   "upload", 
-            "token"     :   token
+            "request"   :   "index", 
+            "token"     :   config["token"]
         })
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
@@ -42,11 +35,32 @@ def upload(filename, event, date, host, port, token):
         })
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
+        raise Exception(ans["status"])
+    return ans["id"]
+
+def upload(filename, id, config):
+    fobj = open(filename, "rb")
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((config["host"],config["port"]))
+    comlib.sendcom(s,
+        {
+            "request"   :   "upload", 
+            "token"     :   config["token"]
+        })
+    ans = comlib.recvcom(s)
+    if ans["status"] != "ok":
         raise Exception
+    
+    comlib.sendcom(s, {"id": id})
+    ans = comlib.recvcom(s)
+    if ans["status"] != "ok":
+        raise Exception    
+    
     hasher = hashlib.md5()
     read = 1
     while read > 0:
-        data = fobj.read(CONFIG["chunksize"])
+        data = fobj.read(config["chunksize"])
         read = len(data)
         hasher.update(data)
         s.sendall(data)
@@ -58,12 +72,12 @@ def upload(filename, event, date, host, port, token):
         raise Exception
 
 def readconfig(name):
-    global CONFIG
     fobj = open(name, "r")
     conf = fobj.read()
     fobj.close()
-    CONFIG=eval(conf)
+    return eval(conf)
     
 if __name__ == "__main__":
-    readconfig(sys.argv[1])
-    upload(sys.argv[2], sys.argv[3], sys.argv[4], CONFIG["host"], CONFIG["port"], CONFIG["token"])
+    config = readconfig(sys.argv[1])
+    id = index(sys.argv[3], sys.argv[4], sys.argv[5], config)
+    upload(sys.argv[2], id, config)

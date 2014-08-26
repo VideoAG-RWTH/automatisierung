@@ -10,19 +10,27 @@ import dblib
 CONFIG={}
 
 class VideoagServer(socketserver.BaseRequestHandler):
+    def setup(self):
+        self.db = dblib.DBsqlite(CONFIG["dbpath"])
+        
     def handle(self):
         com = comlib.recvcom(self.request)
         try:
-            if not dblib.checkauth(com["token"], CONFIG):
+            if not self.db.checkauth(com["token"]):
                 comlib.sendcom(self.request,{"status":"no permission"})
                 return
+            req = com["request"]
         except KeyError as err:
             comlib.sendcom(self.request,{"status":"no key '" + format(err) + "'"})
             return
-        if com["request"] == "index":
-            serverhandler.indexhandle(self.request, CONFIG)
-        elif com["request"] == "upload":
-            serverhandler.uphandle(self.request, CONFIG)
+        comlib.sendcom(self.request,{"status":"ok"})
+        if req == "index":
+            serverhandler.indexhandle(self.request, self.db, CONFIG)
+        elif req == "upload":
+            serverhandler.uphandle(self.request, self.db, CONFIG)
+    
+    def finish(self):
+        self.db.close()
  
 def readconfig(name):
     global CONFIG

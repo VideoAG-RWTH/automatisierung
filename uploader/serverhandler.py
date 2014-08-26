@@ -5,9 +5,8 @@ import os
 import time
 import comlib
 import hashlib
-import dblib
 
-def uphandle(socket, config):
+def uphandle(socket, db, config):
     com = comlib.recvcom(socket)
     try:
         id = com["id"]
@@ -17,8 +16,8 @@ def uphandle(socket, config):
     
     comlib.sendcom(socket,{"status":"ok"})
     
-    realname = dblib.getfilename(id, config)
-    prop = dblib.getfileprop(id, config)
+    realname = db.getfilename(id)
+    prop = db.getfileprop(id)
     size = prop["size"]
     mtime = prop["mtime"]
     
@@ -44,9 +43,10 @@ def uphandle(socket, config):
         raise Exception
     else:
         comlib.sendcom(socket,{"status":"ok"})
-    dblib.updatefile(id, "md5", md5)
+    db.updatefile(id, "md5", md5)
+    db.updatefile(id, "path", realname)
 
-def indexhandle(socket, config):
+def indexhandle(socket, db, config):
     com = comlib.recvcom(socket)
     try:
         filename = com["filename"]
@@ -60,8 +60,10 @@ def indexhandle(socket, config):
         return
     
     status = "ok"
+    id = None
     try:
-        dblib.indexfile(filename, uuhash, size, mtime, event, date)
-    except Exception:
+        id = db.indexfile(filename, uuhash, size, mtime, event, date)
+    except Exception as err:
+        print(format(err))
         status = "bad"
-    comlib.sendcom(socket, {"status": status})
+    comlib.sendcom(socket, {"status": status, "id": id})
