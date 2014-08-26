@@ -8,12 +8,7 @@ import filelib
 import sys
 import hashlib
 
-def index(filename, config):
-    fobj = open(filename, "rb")
-    uuhash = filelib.uuhash(fobj)
-    filesize = str(filelib.getfilesize(fobj))
-    mtime = str(os.stat(filename).st_mtime)
-    
+def index(filenames, config):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config["host"],config["port"]))
     comlib.sendcom(s,
@@ -24,15 +19,22 @@ def index(filename, config):
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
-    filearray = \
-        [
+    
+    filearray = []
+    for filename in filenames:
+        fobj = open(filename, "rb")
+        uuhash = filelib.uuhash(fobj)
+        filesize = str(filelib.getfilesize(fobj))
+        mtime = str(os.stat(filename).st_mtime)
+        filedict = \
             {
                 "size"      :   filesize,
                 "uuhash"    :   uuhash,
                 "mtime"     :   mtime,
                 "filename"  :   filename,
             }
-        ]
+        filearray.append(filedict)
+    
     comlib.sendcom(s, {"files":filearray})
         
     ans = comlib.recvcom(s) #filearray
@@ -81,5 +83,9 @@ def readconfig(name):
     
 if __name__ == "__main__":
     config = readconfig(sys.argv[1])
-    id = index(sys.argv[3], config)[0]["id"]
-    upload(sys.argv[2], id, config)
+    files = []
+    for i in range(2, len(sys.argv)):
+        files.append(sys.argv[i])
+    filearray = index(files, config)
+    for file in filearray:
+        upload(file["filename"], file["id"], config)
