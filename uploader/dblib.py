@@ -38,7 +38,7 @@ class DBconn(object):
     
     def getfilename(self, id):
         prop = self.getfileprop(id)
-        return prop["event"]+"-"+prop["date"]+"-"+prop["filename"]
+        return eval(prop["events"])[0]+"-"+eval(prop["dates"])[0]+"-"+prop["filename"]
 
 class DBconnsql(DBconn):
     """
@@ -63,8 +63,8 @@ class DBconnsql(DBconn):
         else:
             return True
     
-    def indexfile(self, filename, uuhash, size, mtime, event, date):
-        self.csr.execute("insert into files (uuhash, origname, size, mtime, event, date) values (:uuhash, :name, :size, :mtime, :event, :date)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "event":event, "date":date})
+    def indexfile(self, filename, uuhash, size, mtime, events, dates):
+        self.csr.execute("insert into files (uuhash, origname, size, mtime, events, dates) values (:uuhash, :name, :size, :mtime, :events, :dates)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "events":events, "dates":dates})
         self.conn.commit()        
         self.csr.execute("select id from files order by id desc limit 1")
         idrows = self.csr.fetchall()
@@ -77,7 +77,7 @@ class DBconnsql(DBconn):
         self.conn.commit()
     
     def getfileprop(self, id):
-        self.csr.execute("select origname, uuhash, size, mtime, event, date, md5, path from files where id=:id", {"id":id})
+        self.csr.execute("select origname, uuhash, size, mtime, events, dates, md5, path from files where id=:id", {"id":id})
         self.conn.commit()
         idrows = self.csr.fetchall()
         if len(idrows) != 1:
@@ -87,8 +87,8 @@ class DBconnsql(DBconn):
                 "uuhash":   idrow[1],
                 "size":     idrow[2],
                 "mtime":    idrow[3],
-                "event":    idrow[4],
-                "date":     idrow[5],
+                "events":    idrow[4],
+                "dates":     idrow[5],
                 "md5":      idrow[6],
                 "path":     idrow[7]}
         

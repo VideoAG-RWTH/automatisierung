@@ -8,7 +8,7 @@ import filelib
 import sys
 import hashlib
 
-def index(filename, event, date, config):
+def index(filename, config):
     fobj = open(filename, "rb")
     uuhash = filelib.uuhash(fobj)
     filesize = str(filelib.getfilesize(fobj))
@@ -24,19 +24,21 @@ def index(filename, event, date, config):
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
-    comlib.sendcom(s,
-        {
-            "size"      :   filesize,
-            "uuhash"    :   uuhash,
-            "event"     :   event,
-            "mtime"     :   mtime,
-            "date"      :   date,
-            "filename"  :   filename,
-        })
-    ans = comlib.recvcom(s)
+    filearray = \
+        [
+            {
+                "size"      :   filesize,
+                "uuhash"    :   uuhash,
+                "mtime"     :   mtime,
+                "filename"  :   filename,
+            }
+        ]
+    comlib.sendcom(s, {"files":filearray})
+        
+    ans = comlib.recvcom(s) #filearray
     if ans["status"] != "ok":
         raise Exception(ans["status"])
-    return ans["id"]
+    return ans["files"]
 
 def upload(filename, id, config):
     fobj = open(filename, "rb")
@@ -79,5 +81,5 @@ def readconfig(name):
     
 if __name__ == "__main__":
     config = readconfig(sys.argv[1])
-    id = index(sys.argv[3], sys.argv[4], sys.argv[5], config)
+    id = index(sys.argv[3], config)[0]["id"]
     upload(sys.argv[2], id, config)

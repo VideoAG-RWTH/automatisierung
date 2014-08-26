@@ -7,8 +7,8 @@ CREATE TABLE "files" (
 	`path`	TEXT,
 	`size`	INTEGER NOT NULL,
 	`mtime`	INTEGER NOT NULL,
-	`event`	TEXT,
-	`date`	TEXT,
+	`events`	TEXT,
+	`dates`	TEXT,
 	`md5`	TEXT
 );
 CREATE TABLE `auth` (

@@ -5,6 +5,7 @@ import os
 import time
 import comlib
 import hashlib
+import identify
 
 def uphandle(socket, db, config):
     com = comlib.recvcom(socket)
@@ -49,21 +50,28 @@ def uphandle(socket, db, config):
 def indexhandle(socket, db, config):
     com = comlib.recvcom(socket)
     try:
-        filename = com["filename"]
-        date = com["date"]
-        mtime = com["mtime"]
-        event = com["event"]
-        uuhash = com["uuhash"]
-        size = int(com["size"])
+        filearray = com["files"]
     except KeyError as err:
         comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
         return
     
-    status = "ok"
-    id = None
-    try:
-        id = db.indexfile(filename, uuhash, size, mtime, event, date)
-    except Exception as err:
-        print(format(err))
-        status = "bad"
-    comlib.sendcom(socket, {"status": status, "id": id})
+    identify.identify(filearray)
+    
+    for file in filearray:
+        try:
+            filename = file["filename"]
+            mtime = file["mtime"]
+            uuhash = file["uuhash"]
+            size = int(file["size"])
+            events = str(file["events"])
+            dates = str(file["dates"])
+        except KeyError as err:
+            comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
+            return
+        try:
+            file["id"] = db.indexfile(filename, uuhash, size, mtime, events, dates)
+        except Exception as err:
+            comlib.sendcom(socket,{"status":"error: '" + format(err) + "'"})
+            return
+        
+    comlib.sendcom(socket, {"status": "ok", "files": filearray})
