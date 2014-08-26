@@ -5,25 +5,24 @@ import socketserver
 import sys
 import serverhandler
 import comlib
+import dblib
 
 CONFIG={}
 
 class VideoagServer(socketserver.BaseRequestHandler):
     def handle(self):
+        com = comlib.recvcom(self.request)
         try:
-            com = comlib.recvcom(self.request)
-        except ValueError:
-            comlib.sendans(self.request,{"status":"no json"})
-            return
-        try:
-            if com["token"] not in ["moritz", "videoag"]:
-                comlib.sendans(self.request,{"status":"no permission"})
+            if not dblib.checkauth(com["token"], CONFIG):
+                comlib.sendcom(self.request,{"status":"no permission"})
                 return
-        except KeyError:
-            comlib.sendans(self.request,{"status":"no token"})
+        except KeyError as err:
+            comlib.sendcom(self.request,{"status":"no key '" + format(err) + "'"})
             return
-        if com["request"] == "upload":
-            serverhandler.uphandle(self.request, com, CONFIG)
+        if com["request"] == "index":
+            serverhandler.indexhandle(self.request, CONFIG)
+        elif com["request"] == "upload":
+            serverhandler.uphandle(self.request, CONFIG)
  
 def readconfig(name):
     global CONFIG

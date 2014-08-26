@@ -6,15 +6,15 @@ import time
 import comlib
 import hashlib
 
-def uphandle(socket, com, config):
-    filename = com["filename"]
-    date = com["date"]
-    mtime = com["mtime"]
-    event = com["event"]
-    uuhash = com["uuhash"]
-    size = int(com["size"])
+def uphandle(socket, config):
+    com = comlib.recvcom(socket)
+    try:
+        id = com["id"]
+    except KeyError as err:
+            comlib.sendcom(socket,{"status":"no key '" + format(err) + "'"})
+            return
     
-    comlib.sendans(socket,{"status":"ok"})
+    comlib.sendcom(socket,{"status":"ok"})
     
     print(uuhash)
     realname = event+"-"+date+"-"+filename
@@ -37,7 +37,20 @@ def uphandle(socket, com, config):
     md5 = hasher.hexdigest()
     com = comlib.recvcom(socket)
     if com["md5"] != md5:
-        comlib.sendans(socket,{"status":"bad"})
+        comlib.sendcom(socket,{"status":"bad"})
         raise Exception
     else:
-        comlib.sendans(socket,{"status":"ok"})
+        comlib.sendcom(socket,{"status":"ok"})
+
+def indexhandle(socket, config):
+    com = comlib.recvcom(socket)
+    try:
+        filename = com["filename"]
+        date = com["date"]
+        mtime = com["mtime"]
+        event = com["event"]
+        uuhash = com["uuhash"]
+        size = int(com["size"])
+    except KeyError as err:
+            comlib.sendcom(socket,{"status":"no key '" + format(err) + "'"})
+            return

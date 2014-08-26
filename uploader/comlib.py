@@ -3,12 +3,16 @@
 
 import json
 
-def sendans(socket, nojson):
+def sendcom(socket, nojson):
     socket.sendall(bytes(json.dumps(nojson), encoding='utf-8', errors='strict')+b'\n')
     
 def recvcom(socket):
-    return json.loads(str(readline(socket).strip(), encoding='utf-8', errors='strict'))
-    
+    try:
+        return json.loads(str(readline(socket).strip(), encoding='utf-8', errors='strict'))
+    except ValueError:
+        sendcom(socket, {"status":"no json"})
+        raise ValueError  
+
 def readline(s):
     recv = b""
     data = b""

@@ -23,16 +23,22 @@ def upload(filename, event, date, host, port, token):
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host,port))
-    comlib.sendans(s,
+    comlib.sendcom(s,
         {
-            "size"      :   filesize, 
-            "uuhash"    :   uuhash, 
-            "event"     :   event, 
-            "mtime"     :   mtime, 
-            "date"      :   date, 
             "request"   :   "upload", 
-            "filename"  :   filename, 
             "token"     :   token
+        })
+    ans = comlib.recvcom(s)
+    if ans["status"] != "ok":
+        raise Exception
+    comlib.sendcom(s,
+        {
+            "size"      :   filesize,
+            "uuhash"    :   uuhash,
+            "event"     :   event,
+            "mtime"     :   mtime,
+            "date"      :   date,
+            "filename"  :   filename,
         })
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
@@ -46,7 +52,7 @@ def upload(filename, event, date, host, port, token):
         s.sendall(data)
     fobj.close()
     md5 = hasher.hexdigest()
-    comlib.sendans(s, {"status":"ok", "md5":md5})
+    comlib.sendcom(s, {"status":"ok", "md5":md5})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
