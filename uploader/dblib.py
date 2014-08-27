@@ -39,7 +39,10 @@ class DBconn(object):
     
     def getfilename(self, id):
         prop = self.getfileprop(id)
-        return prop["events"].split(" ")[0]+"-"+prop["dates"].split(" ")[0]+"-"+prop["filename"]
+        #filename = prop["events"].split(" ")[0]+"-"+prop["dates"].split(" ")[0]+"-"+prop["filename"]
+        filename = prop["id"]
+        return filename
+        
 
 class DBconnsql(DBconn):
     """
@@ -92,20 +95,21 @@ class DBconnsql(DBconn):
         self.conn.commit()
     
     def getfileprop(self, id):
-        self.csr.execute("select origname, uuhash, size, mtime, events, dates, md5, path from files where id=:id", {"id":id})
+        self.csr.execute("select id, origname, uuhash, size, mtime, events, dates, md5, path from files where id=:id", {"id":id})
         self.conn.commit()
         idrows = self.csr.fetchall()
         if len(idrows) != 1:
             raise ValueError("Not exactly one row returned, one expected.")
         idrow = idrows[0]
-        return {"filename": idrow[0],
-                "uuhash":   idrow[1],
-                "size":     idrow[2],
-                "mtime":    idrow[3],
-                "events":    idrow[4],
-                "dates":     idrow[5],
-                "md5":      idrow[6],
-                "path":     idrow[7]}
+        return {"id":       str(idrow[0]),
+                "filename": idrow[1],
+                "uuhash":   idrow[2],
+                "size":     idrow[3],
+                "mtime":    idrow[4],
+                "events":   idrow[5],
+                "dates":    idrow[6],
+                "md5":      idrow[7],
+                "path":     idrow[8]}
         
 class DBsqlite(DBconnsql):
     """

@@ -17,7 +17,7 @@ def uphandle(socket, db, config):
     
     comlib.sendcom(socket,{"status":"ok"})
     
-    realname = db.getfilename(id)
+    realname = config["datadir"] + "/" + db.getfilename(id)
     prop = db.getfileprop(id)
     size = prop["size"]
     mtime = prop["mtime"]
