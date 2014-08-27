@@ -13,6 +13,18 @@ def getfilesize(fobj):
     fobj.seek(0, os.SEEK_SET)
     return filesize
 
+def parseeventdates(eventdates):
+    num = 0
+    events = ""
+    dates = ""
+    for eventdate in eventdates:
+        events += eventdate["event"] + " "
+        dates += eventdate["date"] + " "
+        num+=1
+    events = events.strip()
+    dates = dates.strip()
+    return {"events":events, "dates":dates, "eventcount":num}
+
 def uuhash(fobj):
     chunksize = 307200
     

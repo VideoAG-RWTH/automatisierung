@@ -1,15 +1,16 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE "files" (
-	`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	`id`		INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`uuhash`	TEXT NOT NULL,
 	`origname`	TEXT NOT NULL,
-	`path`	TEXT,
-	`size`	INTEGER NOT NULL,
-	`mtime`	INTEGER NOT NULL,
+	`path`		TEXT,
+	`size`		INTEGER NOT NULL,
+	`mtime`		INTEGER NOT NULL,
 	`events`	TEXT,
-	`dates`	TEXT,
-	`md5`	TEXT
+	`dates`		TEXT,
+	`eventcount`	INTEGER,
+	`md5`		TEXT
 );
 CREATE TABLE `auth` (
 	`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

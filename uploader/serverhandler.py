@@ -59,17 +59,10 @@ def indexhandle(socket, db, config):
     
     for file in filearray:
         try:
-            filename = file["filename"]
-            mtime = file["mtime"]
-            uuhash = file["uuhash"]
-            size = int(file["size"])
-            events = str(file["events"])
-            dates = str(file["dates"])
+            file["id"] = db.indexfile(file)
         except KeyError as err:
             comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
             return
-        try:
-            file["id"] = db.indexfile(filename, uuhash, size, mtime, events, dates)
         except Exception as err:
             comlib.sendcom(socket,{"status":"error: '" + format(err) + "'"})
             return

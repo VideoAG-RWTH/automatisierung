@@ -73,7 +73,7 @@ def upload(filename, id, config):
     comlib.sendcom(s, {"status":"ok", "md5":md5})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
-        raise Exception
+        raise Exception(ans["status"])
 
 def readconfig(name):
     fobj = open(name, "r")

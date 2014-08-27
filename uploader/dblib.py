@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+import filelib
 
 #A clean class hierarchy
 
@@ -27,7 +28,7 @@ class DBconn(object):
     def checkauth(token):
         pass
     
-    def indexfile(self, filename, uuhash, size, mtime, event, date):
+    def indexfile(self, filedict):
         pass
     
     def updatefile(self, id, key, value):
@@ -38,7 +39,7 @@ class DBconn(object):
     
     def getfilename(self, id):
         prop = self.getfileprop(id)
-        return eval(prop["events"])[0]+"-"+eval(prop["dates"])[0]+"-"+prop["filename"]
+        return prop["events"].split(" ")[0]+"-"+prop["dates"].split(" ")[0]+"-"+prop["filename"]
 
 class DBconnsql(DBconn):
     """
@@ -63,13 +64,27 @@ class DBconnsql(DBconn):
         else:
             return True
     
-    def indexfile(self, filename, uuhash, size, mtime, events, dates):
-        self.csr.execute("insert into files (uuhash, origname, size, mtime, events, dates) values (:uuhash, :name, :size, :mtime, :events, :dates)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "events":events, "dates":dates})
-        self.conn.commit()        
+    def indexfile(self, filedict):
+        filename = filedict["filename"]
+        uuhash = filedict["uuhash"]
+        size = filedict["size"]
+        mtime = filedict["mtime"]
+        eventdates = filedict["events"]
+        
+        eventdatedict = filelib.parseeventdates(eventdates)
+        events = eventdatedict["events"]
+        dates = eventdatedict["dates"]
+        eventcount = eventdatedict["eventcount"]
+        
+        self.csr.execute("insert into files (uuhash, origname, size, mtime, events, dates, eventcount) values (:uuhash, :name, :size, :mtime, :events, :dates, :eventcount)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "events":events, "dates":dates, "eventcount":eventcount})
+        self.conn.commit() 
+        
         self.csr.execute("select id from files order by id desc limit 1")
         idrows = self.csr.fetchall()
+        
         if len(idrows) != 1:
             raise ValueError("Not exactly one row returned, one expected.")
+        
         return idrows[0][0]
     
     def updatefile(self, id, key, value):

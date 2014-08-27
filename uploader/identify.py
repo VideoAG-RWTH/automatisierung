@@ -3,10 +3,11 @@
 def identify(filearray):
     #filearray: [{"filename": filename, "mtime": mtime, "size": size, ...}]
     for file in filearray:
-        dates = []
         events = []
-        events.append("foo")
-        dates.append("26082014")
+        for foundevent in [{"event":"foo", "date":"26082014"}]:
+            event = {}
+            event["event"] = foundevent["event"]
+            event["date"] = foundevent["date"]
+            events.append(event)
         file["events"] = events
-        file["dates"] = dates
     return filearray
