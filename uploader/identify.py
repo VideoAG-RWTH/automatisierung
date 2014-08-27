@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+import urllib2, json, datetime
+
+def getevents(date):
+    # date: datetime object
+    addr = date # conversion must appear here
+    response = urllib2.urlopen(addr)
+    raw = reponse.read()
+    data = json.loads(raw)
+    return data
 
 def identify(filearray):
     #filearray: [{"filename": filename, "mtime": mtime, "size": size, ...}]
