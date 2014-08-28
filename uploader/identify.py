@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*-
-import urllib2, json, time
+
+
+def identify(filearray):
+    #filearray: [{"filename": filename, "mtime": mtime, "size": size, ...}]
+    for file in filearray:
+        events = []
+        for foundevent in [{"event":"foo", "date":"26082014", "id":1337}]:
+            events.append(foundevent)
+        file["events"] = events
+    return filearray
+
+
+"""
+import urllib2
+import json
+import time
 
 def getevents(timestamp):
     addr = "https://videoag.fsmpi.rwth-aachen.de/site/heute.php?start=" + str(timestamp) # maybe make this configurable
@@ -54,3 +69,4 @@ def identify(files):
     for c in clusters:
         c["events"] = clusterevents(events, c)
     return clusters
+"""
