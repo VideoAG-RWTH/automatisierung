@@ -11,12 +11,13 @@ import hashlib
 def index(filenames, config):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config["host"],config["port"]))
+        
+    comlib.auth(s, config["auth"])
+    
     comlib.sendcom(s,{"request":"index"})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
-        
-    comlib.auth(s, config["auth"])
     
     filearray = []
     for filename in filenames:
@@ -38,38 +39,48 @@ def index(filenames, config):
     ans = comlib.recvcom(s) #filearray
     if ans["status"] != "ok":
         raise Exception(ans["status"])
+    
+    comlib.sendcom(s,{"request":"end"})
+    
     return ans["files"]
 
-def upload(filename, id, config):
-    fobj = open(filename, "rb")
+def upload(filearray, config):
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config["host"],config["port"]))
-    comlib.sendcom(s,{"request":"upload"})
-    ans = comlib.recvcom(s)
-    if ans["status"] != "ok":
-        raise Exception
         
     comlib.auth(s, config["auth"])
     
-    comlib.sendcom(s, {"id": id})
-    ans = comlib.recvcom(s)
-    if ans["status"] != "ok":
-        raise Exception    
+    for file in filearray:
+        filename = file["filename"]
+        id = file["id"]
     
-    hasher = hashlib.md5()
-    read = 1
-    while read > 0:
-        data = fobj.read(config["chunksize"])
-        read = len(data)
-        hasher.update(data)
-        s.sendall(data)
-    fobj.close()
-    md5 = hasher.hexdigest()
-    comlib.sendcom(s, {"status":"ok", "md5":md5})
-    ans = comlib.recvcom(s)
-    if ans["status"] != "ok":
-        raise Exception(ans["status"])
+        comlib.sendcom(s,{"request":"upload"})
+        ans = comlib.recvcom(s)
+        if ans["status"] != "ok":
+            raise Exception
+        
+        comlib.sendcom(s, {"id": id})
+        ans = comlib.recvcom(s)
+        if ans["status"] != "ok":
+            raise Exception    
+                
+        fobj = open(filename, "rb")
+        hasher = hashlib.md5()
+        read = 1
+        while read > 0:
+            data = fobj.read(config["chunksize"])
+            read = len(data)
+            hasher.update(data)
+            s.sendall(data)
+        fobj.close()
+        md5 = hasher.hexdigest()
+        comlib.sendcom(s, {"status":"ok", "md5":md5})
+        ans = comlib.recvcom(s)
+        if ans["status"] != "ok":
+            raise Exception(ans["status"])
+    
+    comlib.sendcom(s,{"request":"end"})
 
 def readconfig(name):
     fobj = open(name, "r")
@@ -83,5 +94,4 @@ if __name__ == "__main__":
     for i in range(2, len(sys.argv)):
         files.append(sys.argv[i])
     filearray = index(files, config)
-    for file in filearray:
-        upload(file["filename"], file["id"], config)
+    upload(filearray, config)

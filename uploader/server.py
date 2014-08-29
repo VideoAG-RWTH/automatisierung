@@ -14,28 +14,33 @@ class VideoagServer(socketserver.BaseRequestHandler):
         self.db = dblib.DBmysql(CONFIG["dbuser"], CONFIG["dbpass"], CONFIG["dbhost"], CONFIG["db"])
         
     def handle(self):
-        com = comlib.recvcom(self.request)
+        #Authenticate User
         try:
-            req = com["request"]
-        except KeyError as err:
-            comlib.sendcom(self.request,{"status":"no key '" + format(err) + "'"})
-            return
-        comlib.sendcom(self.request,{"status":"ok"})
-        
-        try:
-            if not comlib.checkauth(s=self.request, db=self.db, saltsize=8192, rounds=100000):
+            if not comlib.checkauth(s=self.request, db=self.db, saltsize=128, rounds=100000):
                 comlib.sendcom(self.request,{"status":"no permission"})
                 return
         except KeyError as err:
             comlib.sendcom(self.request,{"status":"no key '" + format(err) + "'"})
             return
-        
         comlib.sendcom(self.request,{"status":"ok"})
         
-        if req == "index":
-            serverhandler.indexhandle(self.request, self.db, CONFIG)
-        elif req == "upload":
-            serverhandler.uphandle(self.request, self.db, CONFIG)
+        while True:
+            com = comlib.recvcom(self.request)
+            try:
+                req = com["request"]
+            except KeyError as err:
+                comlib.sendcom(self.request,{"status":"no key '" + format(err) + "'"})
+                return
+            comlib.sendcom(self.request,{"status":"ok"})
+            
+            if req == "index":
+                serverhandler.indexhandle(self.request, self.db, CONFIG)
+            elif req == "upload":
+                serverhandler.uphandle(self.request, self.db, CONFIG)
+            elif req == "end":
+                break
+            else:
+                comlib.sendcom(self.request,{"status":"do not understand request '"+req+"'"})
     
     def finish(self):
         self.db.close()
