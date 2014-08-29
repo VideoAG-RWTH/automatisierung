@@ -20,4 +20,6 @@ def readline(s):
     while recv != b"\n":
         data += recv
         recv = s.recv(1)
+        if recv == b"":
+            raise Exception("Connection closed")
     return data
