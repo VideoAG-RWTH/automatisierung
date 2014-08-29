@@ -5,7 +5,7 @@ def identify(filearray):
     #filearray: [{"filename": filename, "mtime": mtime, "size": size, ...}]
     for file in filearray:
         events = []
-        for foundevent in [{"event":"foo", "date":"26082014", "id":1337}]:
+        for foundevent in [{"event":"foo", "date":"26082014", "id":1337},{"event":"bar", "date":"29082014", "id":4711}]:
             events.append(foundevent)
         file["events"] = events
     return filearray

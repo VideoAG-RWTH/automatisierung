@@ -12,6 +12,13 @@ CREATE TABLE `auth` (
   `valid` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `fileevent`;
+CREATE TABLE `fileevent` (
+`id` mediumint(8) unsigned NOT NULL,
+  `file` mediumint(8) unsigned NOT NULL,
+  `lecture` mediumint(5) unsigned NOT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
 DROP TABLE IF EXISTS `files`;
 CREATE TABLE `files` (
 `id` mediumint(8) unsigned NOT NULL,
@@ -20,19 +27,23 @@ CREATE TABLE `files` (
   `path` text,
   `size` bigint(20) unsigned NOT NULL,
   `mtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `event` mediumint(8) unsigned DEFAULT NULL,
-  `md5` char(32) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `md5` binary(16) DEFAULT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 
 ALTER TABLE `auth`
  ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `token` (`token`);
 
+ALTER TABLE `fileevent`
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `filelecture` (`file`,`lecture`), ADD KEY `fileevent` (`file`), ADD KEY `lecture` (`lecture`);
+
 ALTER TABLE `files`
- ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `uuhash` (`uuhash`(255)), ADD KEY `event` (`event`);
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `uuhash` (`uuhash`(255));
 
 
 ALTER TABLE `auth`
-MODIFY `id` smallint(6) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
+MODIFY `id` smallint(6) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `fileevent`
+MODIFY `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT;
 ALTER TABLE `files`
 MODIFY `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT;

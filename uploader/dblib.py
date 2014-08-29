@@ -59,12 +59,23 @@ class DBconnsql(DBconn):
         else:
             return idrows[0][1]
     
+    def indexevent(self, fileid, events):
+        for event in events:
+            eventid = event["id"]
+            self.csr.execute("select id from fileevent where file=%(fileid)s and lecture=%(eventid)s", {"fileid":fileid, "eventid":eventid})
+            rows = self.csr.fetchall()
+            if len(rows) > 1:
+                raise ValueError("Not at most one row returned, at most one expected.")
+            elif len(rows) == 1:
+                continue
+            self.csr.execute("insert into fileevent (file, lecture) values (%(fileid)s, %(eventid)s)", {"fileid": fileid, "eventid":eventid})
+    
     def indexfile(self, filedict):
         filename = filedict["filename"]
         uuhash = filedict["uuhash"]
         size = filedict["size"]
         mtime = filedict["mtime"]
-        eventid = int(filedict["events"][0]["id"])
+        events = filedict["events"]
         
         self.csr.execute("select id, uuhash, size, UNIX_TIMESTAMP(mtime) from files where uuhash=%(uuhash)s", {"uuhash":uuhash})
         rows = self.csr.fetchall()
@@ -72,32 +83,51 @@ class DBconnsql(DBconn):
             raise ValueError("Not at most one row returned, at most one expected.")
         elif len(rows) == 1:
             if rows[0][2] == int(size):
-                return rows[0][0]
+                fileid = rows[0][0]
+                self.indexevent(fileid, events)
+                return fileid
             raise Exception("File with same uuhash, but other size found")
         
-        self.csr.execute("insert into files (uuhash, origname, size, mtime, event) values (%(uuhash)s, %(name)s, %(size)s, FROM_UNIXTIME(%(mtime)s), %(eventid)s)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "eventid":eventid})
+        self.csr.execute("insert into files (uuhash, origname, size, mtime) values (%(uuhash)s, %(name)s, %(size)s, FROM_UNIXTIME(%(mtime)s))", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime})
         self.conn.commit() 
         
-        return self.csr.lastrowid
+        fileid = self.csr.lastrowid
+        self.indexevent(fileid, events)
+        return fileid
     
     def updatefile(self, id, key, value):
         self.csr.execute("update files set "+key+"=%(value)s where id=%(id)s", {"value":value, "id":id})
         self.conn.commit()
     
     def getfileprop(self, id):
-        self.csr.execute("select id, origname, uuhash, size, UNIX_TIMESTAMP(mtime), event, md5, path from files where id=%(id)s", {"id":id})
-        idrows = self.csr.fetchall()
-        if len(idrows) != 1:
+        self.csr.execute("select id, origname, uuhash, size, UNIX_TIMESTAMP(mtime), md5, path from files where id=%(id)s", {"id":id})
+        rows = self.csr.fetchall()
+        if len(rows) != 1:
             raise ValueError("Not exactly one row returned, one expected.")
-        idrow = idrows[0]
-        return {"id":       str(idrow[0]),
-                "filename": idrow[1],
-                "uuhash":   idrow[2],
-                "size":     idrow[3],
-                "mtime":    idrow[4],
-                "event":   idrow[5],
-                "md5":      idrow[6],
-                "path":     idrow[7]}
+        filerow = rows[0]
+        self.csr.execute("select id, file, lecture from fileevent where file=%(fileid)s", {"fileid":filerow[0]})
+        eventrows = self.csr.fetchall()
+        
+        events = []
+        for eventrow in eventrows:
+            event = {
+                    "id":       eventrow[0],
+                    "fileid":   eventrow[1],
+                    "eventid":  eventrow[2],
+                    }
+            events.append(event)
+        
+        filedict = {
+                    "id":       str(filerow[0]),
+                    "filename": filerow[1],
+                    "uuhash":   filerow[2],
+                    "size":     filerow[3],
+                    "mtime":    filerow[4],
+                    "md5":      filerow[5],
+                    "path":     filerow[6],
+                    "events":   events,
+                    }
+        return filedict
         
 class DBmysql(DBconnsql):
     """
