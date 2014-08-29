@@ -55,15 +55,15 @@ class DBconnsql(DBconn):
     def close(self):
         pass
     
-    def checkauth(self, token):
-        self.csr.execute("select user from auth where token=%(token)s", {"token":token})
+    def checkauth(self, id):
+        self.csr.execute("select id, token, user, date from auth where id=%(id)s and valid=1", {"id":id})
         idrows = self.csr.fetchall()
         if len(idrows) > 1:
             raise ValueError("Not at most one row returned, at most one expected.")
         if len(idrows) < 1:
-            return False
+            return None
         else:
-            return True
+            return idrows[0][1]
     
     def indexfile(self, filedict):
         filename = filedict["filename"]

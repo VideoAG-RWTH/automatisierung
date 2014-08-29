@@ -11,14 +11,12 @@ import hashlib
 def index(filenames, config):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config["host"],config["port"]))
-    comlib.sendcom(s,
-        {
-            "request"   :   "index", 
-            "token"     :   config["token"]
-        })
+    comlib.sendcom(s,{"request":"index"})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
+        
+    comlib.auth(s, config["auth"])
     
     filearray = []
     for filename in filenames:
@@ -47,14 +45,12 @@ def upload(filename, id, config):
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config["host"],config["port"]))
-    comlib.sendcom(s,
-        {
-            "request"   :   "upload", 
-            "token"     :   config["token"]
-        })
+    comlib.sendcom(s,{"request":"upload"})
     ans = comlib.recvcom(s)
     if ans["status"] != "ok":
         raise Exception
+        
+    comlib.auth(s, config["auth"])
     
     comlib.sendcom(s, {"id": id})
     ans = comlib.recvcom(s)
