@@ -6,6 +6,7 @@ import time
 import comlib
 import hashlib
 import identify
+import filelib
 
 def uphandle(socket, db, config):
     com = comlib.recvcom(socket)
@@ -15,12 +16,17 @@ def uphandle(socket, db, config):
             comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
             return
     
-    comlib.sendcom(socket,{"status":"ok"})
-    
-    realname = config["datadir"] + "/" + db.getfilename(id)
     prop = db.getfileprop(id)
+    realname = config["datadir"] + "/" + filelib.getfilename(prop)
+    if prop["path"] != None:
+        realname = prop["path"]
+        if prop["md5"] != None:
+            comlib.sendcom(socket,{"status":"noupload"})
+            return
     size = prop["size"]
     mtime = prop["mtime"]
+    
+    comlib.sendcom(socket,{"status":"ok"})
     
     fobj = open(realname,"wb")
     hasher = hashlib.md5()

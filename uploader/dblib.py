@@ -36,12 +36,6 @@ class DBconn(object):
     
     def getfileprop(self, id):
         pass
-    
-    def getfilename(self, id):
-        prop = self.getfileprop(id)
-        #filename = prop["events"].split(" ")[0]+"-"+prop["dates"].split(" ")[0]+"-"+prop["filename"]
-        filename = prop["id"]
-        return filename
 
 class DBconnsql(DBconn):
     """
@@ -71,6 +65,15 @@ class DBconnsql(DBconn):
         size = filedict["size"]
         mtime = filedict["mtime"]
         eventid = int(filedict["events"][0]["id"])
+        
+        self.csr.execute("select id, uuhash, size, UNIX_TIMESTAMP(mtime) from files where uuhash=%(uuhash)s", {"uuhash":uuhash})
+        rows = self.csr.fetchall()
+        if len(rows) > 1:
+            raise ValueError("Not at most one row returned, at most one expected.")
+        elif len(rows) == 1:
+            if rows[0][2] == int(size):
+                return rows[0][0]
+            raise Exception("File with same uuhash, but other size found")
         
         self.csr.execute("insert into files (uuhash, origname, size, mtime, event) values (%(uuhash)s, %(name)s, %(size)s, FROM_UNIXTIME(%(mtime)s), %(eventid)s)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "eventid":eventid})
         self.conn.commit() 

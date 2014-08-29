@@ -62,8 +62,10 @@ def upload(filearray, config):
         
         comlib.sendcom(s, {"id": id})
         ans = comlib.recvcom(s)
-        if ans["status"] != "ok":
-            raise Exception    
+        if ans["status"] == "noupload":
+            continue
+        elif ans["status"] != "ok":
+            raise Exception
                 
         fobj = open(filename, "rb")
         hasher = hashlib.md5()

@@ -24,6 +24,10 @@ def parseeventdates(eventdates):
     events = events.strip()
     dates = dates.strip()
     return {"events":events, "dates":dates, "eventcount":num}
+    
+def getfilename(prop):
+    filename = prop["id"]
+    return filename
 
 def uuhash(fobj):
     chunksize = 307200
