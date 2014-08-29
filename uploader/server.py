@@ -11,7 +11,7 @@ CONFIG={}
 
 class VideoagServer(socketserver.BaseRequestHandler):
     def setup(self):
-        self.db = dblib.DBsqlite(CONFIG["dbpath"])
+        self.db = dblib.DBmysql(CONFIG["dbuser"], CONFIG["dbpass"], CONFIG["dbhost"], CONFIG["db"])
         
     def handle(self):
         com = comlib.recvcom(self.request)

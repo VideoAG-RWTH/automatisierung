@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
-import filelib
+import mysql.connector
 
 #A clean class hierarchy
 
@@ -42,7 +42,6 @@ class DBconn(object):
         #filename = prop["events"].split(" ")[0]+"-"+prop["dates"].split(" ")[0]+"-"+prop["filename"]
         filename = prop["id"]
         return filename
-        
 
 class DBconnsql(DBconn):
     """
@@ -57,8 +56,7 @@ class DBconnsql(DBconn):
         pass
     
     def checkauth(self, token):
-        self.csr.execute("select user from auth where token=:token", {"token":token})
-        self.conn.commit()
+        self.csr.execute("select user from auth where token=%(token)s", {"token":token})
         idrows = self.csr.fetchall()
         if len(idrows) > 1:
             raise ValueError("Not at most one row returned, at most one expected.")
@@ -72,31 +70,19 @@ class DBconnsql(DBconn):
         uuhash = filedict["uuhash"]
         size = filedict["size"]
         mtime = filedict["mtime"]
-        eventdates = filedict["events"]
+        eventid = int(filedict["events"][0]["id"])
         
-        eventdatedict = filelib.parseeventdates(eventdates)
-        events = eventdatedict["events"]
-        dates = eventdatedict["dates"]
-        eventcount = eventdatedict["eventcount"]
-        
-        self.csr.execute("insert into files (uuhash, origname, size, mtime, events, dates, eventcount) values (:uuhash, :name, :size, :mtime, :events, :dates, :eventcount)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "events":events, "dates":dates, "eventcount":eventcount})
+        self.csr.execute("insert into files (uuhash, origname, size, mtime, event) values (%(uuhash)s, %(name)s, %(size)s, FROM_UNIXTIME(%(mtime)s), %(eventid)s)", {"uuhash": uuhash, "name":filename, "size":size, "mtime":mtime, "eventid":eventid})
         self.conn.commit() 
         
-        self.csr.execute("select id from files order by id desc limit 1")
-        idrows = self.csr.fetchall()
-        
-        if len(idrows) != 1:
-            raise ValueError("Not exactly one row returned, one expected.")
-        
-        return idrows[0][0]
+        return self.csr.lastrowid
     
     def updatefile(self, id, key, value):
-        self.csr.execute("update files set "+key+"=:value where id=:id", {"key":key, "value":value, "id":id})
+        self.csr.execute("update files set "+key+"=%(value)s where id=%(id)s", {"value":value, "id":id})
         self.conn.commit()
     
     def getfileprop(self, id):
-        self.csr.execute("select id, origname, uuhash, size, mtime, events, dates, md5, path from files where id=:id", {"id":id})
-        self.conn.commit()
+        self.csr.execute("select id, origname, uuhash, size, UNIX_TIMESTAMP(mtime), event, md5, path from files where id=%(id)s", {"id":id})
         idrows = self.csr.fetchall()
         if len(idrows) != 1:
             raise ValueError("Not exactly one row returned, one expected.")
@@ -106,11 +92,25 @@ class DBconnsql(DBconn):
                 "uuhash":   idrow[2],
                 "size":     idrow[3],
                 "mtime":    idrow[4],
-                "events":   idrow[5],
-                "dates":    idrow[6],
-                "md5":      idrow[7],
-                "path":     idrow[8]}
+                "event":   idrow[5],
+                "md5":      idrow[6],
+                "path":     idrow[7]}
         
+class DBmysql(DBconnsql):
+    """
+    This is the concrete class for a mysql database backend.
+    """
+    def __init__(self, user, password, host="localhost", database="videoag"):
+        self.conn = mysql.connector.connect(user=user,
+                                            password=password,
+                                            host=host,
+                                            database=database)
+        self.csr = self.conn.cursor()
+    
+    def close(self):
+        self.conn.close()
+
+
 class DBsqlite(DBconnsql):
     """
     This is the concrete class for a sqlite3 database backend.
