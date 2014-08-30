@@ -11,7 +11,8 @@ CONFIG={}
 
 class VideoagServer(socketserver.BaseRequestHandler):
     def setup(self):
-        self.db = dblib.DBmysql(CONFIG["dbuser"], CONFIG["dbpass"], CONFIG["dbhost"], CONFIG["db"])
+        dbconf = CONFIG["dbconf"]
+        self.db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
         
     def handle(self):
         #Authenticate User
@@ -54,6 +55,7 @@ def readconfig(name):
  
 if __name__ == "__main__":
     readconfig(sys.argv[1])
-    server = socketserver.TCPServer((CONFIG["host"], CONFIG["port"]), VideoagServer)
+    serverconf = CONFIG["serverconf"]
+    server = socketserver.TCPServer((serverconf["host"], serverconf["port"]), VideoagServer)
     server.serve_forever()
 #    server.handle_request()

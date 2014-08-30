@@ -31,7 +31,7 @@ def auth(s, auth):
     sendcom(s, {"authid":auth["id"]})
     ans = recvcom(s)
     if ans["status"] != "ok":
-        raise Exception
+        raise Exception("status: "+ans["status"])
         
     salt = base64.b64decode(ans["salt"])
     rounds = ans["rounds"]
@@ -42,7 +42,7 @@ def auth(s, auth):
     
     ans = recvcom(s)
     if ans["status"] != "ok":
-        raise Exception
+        raise Exception("status: "+ans["status"])
         
 def checkauth(s, db, saltsize, rounds):
     ans = recvcom(s)
