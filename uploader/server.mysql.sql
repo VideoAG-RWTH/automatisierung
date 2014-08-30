@@ -27,7 +27,7 @@ CREATE TABLE `files` (
   `path` text,
   `size` bigint(20) unsigned NOT NULL,
   `mtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `md5` binary(16) DEFAULT NULL
+  `md5` char(32) DEFAULT NULL
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 
