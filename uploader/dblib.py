@@ -61,7 +61,7 @@ class DBconnsql(DBconn):
     
     def indexevent(self, fileid, events):
         for event in events:
-            eventid = event["id"]
+            eventid = event["lecture_id"]
             self.csr.execute("select id from fileevent where file=%(fileid)s and lecture=%(eventid)s", {"fileid":fileid, "eventid":eventid})
             rows = self.csr.fetchall()
             if len(rows) > 1:
@@ -111,9 +111,9 @@ class DBconnsql(DBconn):
         events = []
         for eventrow in eventrows:
             event = {
-                    "id":       eventrow[0],
-                    "fileid":   eventrow[1],
-                    "eventid":  eventrow[2],
+                    "lecture_id":   eventrow[0],
+                    "fileid":       eventrow[1],
+                    "eventid":      eventrow[2],
                     }
             events.append(event)
         

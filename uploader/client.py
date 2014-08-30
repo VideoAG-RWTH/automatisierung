@@ -24,7 +24,7 @@ def index(filenames, config):
         fobj = open(filename, "rb")
         uuhash = filelib.uuhash(fobj)
         filesize = str(filelib.getfilesize(fobj))
-        mtime = str(os.stat(filename).st_mtime)
+        mtime = os.stat(filename).st_mtime
         filedict = \
             {
                 "size"      :   filesize,

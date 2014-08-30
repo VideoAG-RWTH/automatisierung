@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import urllib
+import json
+import time
 
+"""
 def identify(filearray):
     #filearray: [{"filename": filename, "mtime": mtime, "size": size, ...}]
     for file in filearray:
@@ -9,18 +13,13 @@ def identify(filearray):
             events.append(foundevent)
         file["events"] = events
     return filearray
-
-
 """
-import urllib2
-import json
-import time
 
 def getevents(timestamp):
     addr = "https://videoag.fsmpi.rwth-aachen.de/site/heute.php?start=" + str(timestamp) # maybe make this configurable
-    response = urllib2.urlopen(addr)
+    response = urllib.request.urlopen(addr)
     raw = response.read()
-    data = json.loads(raw)
+    data = json.loads(str(raw, encoding='utf-8', errors='strict'))
     return data
 
 def today():
@@ -40,7 +39,7 @@ def findclusters(files):
     lasttime = 0
     for f in sort:
         if abs(f["mtime"] - lasttime) > confidence(): # maybe don't use confidence() here # and/or add or lasttime == 0
-            cluster.append({"files": [f], "events": []) # new cluster
+            cluster.append({"files": [f], "events": []}) # new cluster
         else:
             cluster[-1]["files"].append(f) # append to cluster
     return cluster
@@ -64,9 +63,22 @@ def clusterevents(events, cluster):
 # returns list of clusters: [{"files": [,,,], "events": [,,]},...]
 def identify(files):
     #files: [{"filename": filename, "mtime": mtime, "size": size, ...}]
-    events = getevents(today())
+    events = getevents(today())["response"]["lectures"]
     clusters = findclusters(files)
     for c in clusters:
         c["events"] = clusterevents(events, c)
-    return clusters
-"""
+    
+    #Covert to another format ;)
+    filearray = []
+    i=0
+    for c in clusters:
+        for f in c["files"]:
+            fevents = []
+            for e in c["events"]:
+                e["id"] = i
+                fevents.append(e)
+            f["events"] = fevents
+            filearray.append(f)
+        i+=1
+    
+    return filearray
