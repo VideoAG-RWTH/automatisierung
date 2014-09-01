@@ -69,6 +69,7 @@ class DBconnsql(DBconn):
             elif len(rows) == 1:
                 continue
             self.csr.execute("insert into fileevent (file, lecture) values (%(fileid)s, %(eventid)s)", {"fileid": fileid, "eventid":eventid})
+            self.conn.commit()
     
     def indexfile(self, filedict):
         filename = filedict["filename"]
@@ -111,9 +112,9 @@ class DBconnsql(DBconn):
         events = []
         for eventrow in eventrows:
             event = {
-                    "lecture_id":   eventrow[0],
-                    "fileid":       eventrow[1],
-                    "eventid":      eventrow[2],
+                    "id":       eventrow[0],
+                    "fileid":   eventrow[1],
+                    "eventid":  eventrow[2],
                     }
             events.append(event)
         
@@ -128,6 +129,14 @@ class DBconnsql(DBconn):
                     "events":   events,
                     }
         return filedict
+        
+    def adduser(self, user, token):
+        self.csr.execute("update auth set valid=0 where user=%(user)s", {"user":user})
+        self.csr.execute("insert into auth (user, token) values (%(user)s, %(token)s)", {"user": user, "token":token})
+        self.conn.commit()
+        
+        return self.csr.lastrowid
+    
         
 class DBmysql(DBconnsql):
     """

@@ -1,23 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import mysql.connector
 import os
 import sys
 import pwd
 import hashlib
+import dblib
+import apilib
 
 def adduser(user, dbconf):
-    conn = mysql.connector.connect(user=dbconf["dbuser"], password=dbconf["dbpass"], host=dbconf["dbhost"], database=dbconf["db"])
-    csr = conn.cursor()
+    db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
     
-    csr.execute("update auth set valid=0 where user=%(user)s", {"user":user})
     token = hashlib.sha512(os.urandom(8192)).hexdigest()
-    csr.execute("insert into auth (user, token) values (%(user)s, %(token)s)", {"user": user, "token":token})
-    conn.commit()
+    rowid = db.adduser(user, token)
     
-    return '"auth":{"id":"'+str(csr.lastrowid)+'", "token":"'+token+'"},'
+    db.close()
     
+    return '"auth":{"id":"'+str(rowid)+'", "token":"'+token+'"},'
+    
+def listevents(fileid, config):
+    dbconf = config["dbconf"]
+    db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
+    
+    prop = db.getfileprop(fileid)
+    events = prop["events"]
+    lectures = []
+    for event in events:
+        id = event["eventid"]
+        lecture = apilib.lectures(id, config["apiurl"])
+        lecture["course"] = apilib.courses(lecture["course_id"], config["apiurl"])
+        
+        lectures.append(lecture)
+    
+    return lectures
+    
+
 def readconfig(name):
     fobj = open(name, "r")
     conf = fobj.read()
@@ -29,3 +46,6 @@ if __name__ == "__main__":
     if sys.argv[2] == "adduser":
         user = pwd.getpwuid(os.getuid())[0]
         print(adduser(user, config["dbconf"]))
+        
+    elif sys.argv[2] == "listevents":
+        print(listevents(sys.argv[3], config))
