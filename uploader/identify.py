@@ -15,17 +15,18 @@ def identify(filearray):
     return filearray
 """
 
-def getevents(timestamp):
-    addr = "https://videoag.fsmpi.rwth-aachen.de/site/heute.php?start=" + str(timestamp) # maybe make this configurable
+def getevents(timestamp, duration=86400):
+    addr = "https://videoag.fsmpi.rwth-aachen.de/site/heute.php?start=" + str(timestamp) + "&timespan=" + str(duration) # maybe make this configurable
     response = urllib.request.urlopen(addr)
     raw = response.read()
     data = json.loads(str(raw, encoding='utf-8', errors='strict'))
     return data
 
 def today():
-    now = time.time()
-    now = int(now - now % 86400)
-    return now
+    return dayify(time.time())
+
+def dayify(timestamp):
+    return int(timestamp - timestamp % 86400)
 
 def confidence(): # maybe make this configurable
     return 15 * 60 # 15 minutes
@@ -60,10 +61,24 @@ def clusterevents(events, cluster):
                 ret.append(p)
     return ret
 
+def filedates(files):
+    start = today()
+    end = today() + 86400
+    for f in files:
+        if f["mtime"] < start:
+            start = f["mtime"]
+        if f["mtime"] > end:
+            end = f["mtime"]
+    start = dayify(start)
+    end = dayify(end) + 86400
+    duration = end - start
+    return start, duration
+
 # returns list of clusters: [{"files": [,,,], "events": [,,]},...]
 def identify(files):
     #files: [{"filename": filename, "mtime": mtime, "size": size, ...}]
-    events = getevents(today())["response"]["lectures"]
+    start, duration = filedates(files)
+    events = getevents(start, duration)["response"]["lectures"]
     clusters = findclusters(files)
     for c in clusters:
         c["events"] = clusterevents(events, c)
