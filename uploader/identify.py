@@ -32,7 +32,7 @@ def confidence(): # maybe make this configurable
     return 15 * 60 # 15 minutes
 
 def during(event, timestamp):
-    return timestamp >= event["starting"] - confidence() and timestamp <= event["ending"] + confidence()
+    return timestamp+2*3600 >= event["starting"] - confidence() and timestamp+2*3600 <= event["ending"] + confidence()
 
 def findclusters(files):
     sort = sorted(files, key=lambda f: f["mtime"])
@@ -43,6 +43,7 @@ def findclusters(files):
             cluster.append({"files": [f], "events": []}) # new cluster
         else:
             cluster[-1]["files"].append(f) # append to cluster
+        lasttime = f["mtime"]
     return cluster
 
 def possibleevents(events, timestamp):
