@@ -7,6 +7,7 @@ import pwd
 import hashlib
 import dblib
 import apilib
+import identify
 
 def adduser(user, dbconf):
     db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
@@ -32,7 +33,23 @@ def listevents(fileid, config):
         
         lectures.append(lecture)
     
+    db.close()
+    
     return lectures
+    
+def reidentify(fileids, config):
+    dbconf = config["dbconf"]
+    db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
+    
+    files = []
+    for fileid in fileids:
+        files.append(db.getfileprop(fileid))
+    
+    files = identify.identify(files)
+    for file in files:
+        db.indexfile(file)
+    
+    db.close()
     
 
 def readconfig(name):
@@ -49,3 +66,9 @@ if __name__ == "__main__":
         
     elif sys.argv[2] == "listevents":
         print(listevents(sys.argv[3], config))
+    
+    elif sys.argv[2] == "reidentify":
+        fileids = []
+        for i in range(3, len(sys.argv)):
+            fileids.append(sys.argv[i])
+        reidentify(fileids, config)

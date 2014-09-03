@@ -59,7 +59,10 @@ class DBconnsql(DBconn):
         else:
             return idrows[0][1]
     
-    def indexevent(self, fileid, events):
+    def indexevent(self, fileid, events, delete=False):
+        if delete:
+            self.csr.execute("delete from fileevent where file=%(fileid)s", {"fileid": fileid})
+            self.conn.commit()
         for event in events:
             eventid = event["lecture_id"]
             self.csr.execute("select id from fileevent where file=%(fileid)s and lecture=%(eventid)s", {"fileid":fileid, "eventid":eventid})

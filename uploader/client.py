@@ -84,6 +84,14 @@ def upload(filearray, config):
     
     comlib.sendcom(s,{"request":"end"})
 
+def findfiles(dir, endings=["mts", "wav"]):
+    filearray = []
+    for dirpath, dirnames, filenames in os.walk(dir):
+        for filename in filenames:
+            if filename.split(".")[-1].lower() in ["mts", "wav"]:
+                filearray.append(os.path.join(dirpath, filename))
+    return filearray
+
 def readconfig(name):
     fobj = open(name, "r")
     conf = fobj.read()
@@ -93,7 +101,8 @@ def readconfig(name):
 if __name__ == "__main__":
     config = readconfig(sys.argv[1])
     files = []
-    for i in range(2, len(sys.argv)):
-        files.append(sys.argv[i])
+    #for i in range(2, len(sys.argv)):
+    #    files.append(sys.argv[i])
+    files = findfiles(sys.argv[2])
     filearray = index(files, config)
     upload(filearray, config)

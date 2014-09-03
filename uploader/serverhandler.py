@@ -7,6 +7,7 @@ import comlib
 import hashlib
 import identify
 import filelib
+#import checker
 
 def uphandle(socket, db, config):
     com = comlib.recvcom(socket)
@@ -23,6 +24,8 @@ def uphandle(socket, db, config):
         if prop["md5"] != None:
             comlib.sendcom(socket,{"status":"noupload"})
             return
+    db.updatefile(id, "path", realname)
+    
     size = prop["size"]
     mtime = prop["mtime"]
     
@@ -30,6 +33,7 @@ def uphandle(socket, db, config):
     
     fobj = open(realname,"wb")
     hasher = hashlib.md5()
+    #cmts = checker.MP2T()
     read = 1
     while size > 0:
         if size < config["chunksize"]:
@@ -39,6 +43,7 @@ def uphandle(socket, db, config):
         data = socket.recv(toread)
         read = len(data)
         hasher.update(data)
+        #cmts.update(data)
         fobj.write(data)
         size-=read
     fobj.close()
@@ -51,7 +56,6 @@ def uphandle(socket, db, config):
     else:
         comlib.sendcom(socket,{"status":"ok"})
     db.updatefile(id, "md5", md5)
-    db.updatefile(id, "path", realname)
 
 def indexhandle(socket, db, config):
     com = comlib.recvcom(socket)
