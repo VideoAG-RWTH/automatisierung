@@ -8,6 +8,8 @@ import hashlib
 import dblib
 import apilib
 import identify
+import random
+import time
 
 def adduser(user, dbconf):
     db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
@@ -50,7 +52,25 @@ def reidentify(fileids, config):
         db.indexfile(file)
     
     db.close()
-    
+
+def maketestdata(dir, courseid, api="https://videoag.fsmpi.rwth-aachen.de/api.php/v1/"):
+#    if (fileid==None) == (eventid==None):
+#        raise Exception("Excectly one of fileid and eventid must be not None")
+    lids = apilib.courselectures(courseid)
+    for l in lids:
+        lprops = apilib.lectures(l)
+        start = lprops["time"]["timestamp"]
+        stop = start + lprops["duration"]*60
+        gap = random.randint(10*60, 15*60)
+        for i in range(start-random.randint(0, 15*60), stop+random.randint(0, 15*60)):
+            if gap == 0:
+                gap = random.randint(10*60, 15*60)
+                fname = os.path.join(dir, str(i)+".MTS")
+                f = open(fname, "wb")
+                f.write(os.urandom(1024*1024))
+                f.close()
+                os.utime(fname, times=(time.time(),float(i)))
+            gap-=1
 
 def readconfig(name):
     fobj = open(name, "r")
@@ -72,3 +92,6 @@ if __name__ == "__main__":
         for i in range(3, len(sys.argv)):
             fileids.append(sys.argv[i])
         reidentify(fileids, config)
+    
+    elif sys.argv[2] == "maketestdata":
+        maketestdata(sys.argv[3], sys.argv[4])

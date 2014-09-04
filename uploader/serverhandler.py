@@ -65,7 +65,7 @@ def indexhandle(socket, db, config):
         comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
         return
     
-    identify.identify(filearray)
+    filearray = identify.identify(filearray)
     
     for file in filearray:
         try:
