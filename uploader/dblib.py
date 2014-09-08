@@ -140,6 +140,14 @@ class DBconnsql(DBconn):
         
         return self.csr.lastrowid
     
+    def newlogid(self):
+        self.csr.execute("insert into logids (logid) VALUES (NULL)")
+        return self.csr.lastrowid
+    
+    def log(self, id, level, msg):
+        self.csr.execute("insert into log (level, logid, msg) values (%(level)s, %(logid)s, %(msg)s)", {"level": str(level), "logid":str(id), "msg":msg})
+        self.conn.commit()
+        
         
 class DBmysql(DBconnsql):
     """
@@ -156,16 +164,16 @@ class DBmysql(DBconnsql):
         self.conn.close()
 
 
-class DBsqlite(DBconnsql):
-    """
-    This is the concrete class for a sqlite3 database backend.
-    """
-    
-    def __init__(self, path):
-        super().__init__()
-        self.conn = sqlite3.connect(path)
-        self.csr = self.conn.cursor()
-        
-    def close(self):
-        self.conn.close()
-    
+#class DBsqlite(DBconnsql):
+#    """
+#    This is the concrete class for a sqlite3 database backend.
+#    BROKEN!
+#    """
+#    
+#    def __init__(self, path):
+#        super().__init__()
+#        self.conn = sqlite3.connect(path)
+#        self.csr = self.conn.cursor()
+#        
+#    def close(self):
+#        self.conn.close()

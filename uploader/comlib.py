@@ -44,13 +44,15 @@ def auth(s, auth):
     if ans["status"] != "ok":
         raise Exception("status: "+ans["status"])
         
-def checkauth(s, db, saltsize, rounds):
+def checkauth(s, db, log, saltsize, rounds):
     ans = recvcom(s)
     id = ans["authid"]
+    log.log(2, "trying to authenticate user " + str(id))
     
     token = db.checkauth(id)
     
     if token == None:
+        log.log(1, "token " + str(id) + "does not exists")
         return False
     
     salt = os.urandom(saltsize)
