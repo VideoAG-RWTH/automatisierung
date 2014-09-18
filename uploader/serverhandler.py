@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import time
 import comlib
 import hashlib
 import identify
 import filelib
-#import checker
+import tests
 
 def uphandle(socket, db, log, config):
     log.log(3, "starting indexhandle")
@@ -20,7 +18,7 @@ def uphandle(socket, db, log, config):
             return
     
     prop = db.getfileprop(id)
-    realname = config["datadir"] + "/" + filelib.getfilename(prop)
+    realname = config["dirconf"]["data"] + "/" + filelib.getstorename(prop)
     if prop["path"] != None:
         log.log(2, "id '" + str(id) + "' already present")
         realname = prop["path"]
@@ -33,14 +31,20 @@ def uphandle(socket, db, log, config):
     log.log(2, "uploading id '" + str(id) + "' as file '" + realname + "'")
     
     size = prop["size"]
-    mtime = prop["mtime"]
     
     comlib.sendcom(socket,{"status":"ok"})
     log.log(3, "receiving " + str(size) + " bytes")
     
     fobj = open(realname,"wb")
     hasher = hashlib.md5()
-    #cmts = checker.MP2T()
+    
+    ending = prop["filename"].split(".")[-1].lower()
+    availtest = db.posstest(ending)
+    testobjs = []
+    for test in tests.alltests:
+        if test.NAME in availtest:
+            testobjs.append(test())
+    
     read = 1
     while size > 0:
         if size < config["chunksize"]:
@@ -50,12 +54,15 @@ def uphandle(socket, db, log, config):
         data = socket.recv(toread)
         read = len(data)
         hasher.update(data)
-        #cmts.update(data)
+        for obj in testobjs:
+            obj.update(data)
         fobj.write(data)
         size-=read
     fobj.close()
-    os.utime(realname, times=(time.time(),float(mtime)))
     md5 = hasher.hexdigest()
+    for obj in testobjs:
+        res = obj.final()
+        db.indextest(id, obj.NAME, res)
     com = comlib.recvcom(socket)
     if com["md5"] != md5:
         comlib.sendcom(socket,{"status":"bad"})
