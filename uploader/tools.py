@@ -10,6 +10,7 @@ import apilib
 import identify
 import random
 import time
+import filelib
 
 def adduser(user, dbconf):
     db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
@@ -52,6 +53,15 @@ def reidentify(fileids, config):
         db.indexfile(file)
     
     db.close()
+    
+def link(fileids, config):
+    dbconf = config["dbconf"]
+    db = dblib.DBmysql(dbconf["dbuser"], dbconf["dbpass"], dbconf["dbhost"], dbconf["db"])
+    
+    for id in fileids:
+        filelib.linkall(id, db, config["dirconf"]["human"])
+    
+    db.close()
 
 def maketestdata(dir, courseid, api="https://videoag.fsmpi.rwth-aachen.de/api.php/v1/"):
 #    if (fileid==None) == (eventid==None):
@@ -92,6 +102,12 @@ if __name__ == "__main__":
         for i in range(3, len(sys.argv)):
             fileids.append(sys.argv[i])
         reidentify(fileids, config)
+    
+    elif sys.argv[2] == "link":
+        fileids = []
+        for i in range(3, len(sys.argv)):
+            fileids.append(sys.argv[i])
+        link(fileids, config)
     
     elif sys.argv[2] == "maketestdata":
         maketestdata(sys.argv[3], sys.argv[4])

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sqlite3
 import mysql.connector
 
 #A clean class hierarchy
@@ -109,9 +108,9 @@ class DBconnsql(DBconn):
         if len(rows) != 1:
             raise ValueError("Not exactly one row returned, one expected.")
         filerow = rows[0]
+        
         self.csr.execute("select id, file, lecture from fileevent where file=%(fileid)s", {"fileid":filerow[0]})
         eventrows = self.csr.fetchall()
-        
         events = []
         for eventrow in eventrows:
             event = {
@@ -120,6 +119,24 @@ class DBconnsql(DBconn):
                     "eventid":  eventrow[2],
                     }
             events.append(event)
+        
+        self.csr.execute("select filesubtest.data, filesubtest.good, subtest.name, tests.name from filesubtest join subtest on subtest.id=filesubtest.subtest join tests on tests.id=subtest.test where filesubtest.file=%(fileid)s", {"fileid":filerow[0]})
+        subtestrows = self.csr.fetchall()
+        subtests = []
+        for row in subtestrows:
+            subtest = {}
+            subtest["testdata"] = row[0]
+            subtest["good"] = row[1]
+            subtest["subtestname"] = row[2]
+            subtest["testname"] = row[3]
+            subtests.append(subtest)
+        
+        self.csr.execute("select path from filepaths where fileid=%(fileid)s", {"fileid":filerow[0]})
+        pathrows = self.csr.fetchall()
+        
+        paths = []
+        for row in pathrows:
+            paths.append(row[0])
         
         filedict = {
                     "id":       str(filerow[0]),
@@ -130,6 +147,8 @@ class DBconnsql(DBconn):
                     "md5":      filerow[5],
                     "path":     filerow[6],
                     "events":   events,
+                    "subtests": subtests,
+                    "paths":    paths
                     }
         return filedict
         
@@ -146,6 +165,33 @@ class DBconnsql(DBconn):
     
     def log(self, id, level, msg):
         self.csr.execute("insert into log (level, logid, msg) values (%(level)s, %(logid)s, %(msg)s)", {"level": str(level), "logid":str(id), "msg":msg})
+        self.conn.commit()
+    
+    def posstest(self, ending):
+        self.csr.execute("select tests.name from endings join testending on endings.id=testending.ending join tests on testending.test=tests.id where endings.ending=%(ending)s", {"ending": ending})
+        rows = self.csr.fetchall()
+        tests = []
+        for row in rows:
+            tests.append(row[0])
+        return tests
+    
+    def indextest(self, fileid, testname, data):
+        self.csr.execute("select id from tests where name=%(name)s", {"name":testname})
+        rows = self.csr.fetchall()
+        if len(rows) != 1:
+            raise ValueError("Not exactly one row returned, one expected.")
+        testid = rows[0][0]
+        self.csr.execute("select id, name from subtest where test=%(test)s", {"test":testid})
+        rows = self.csr.fetchall()
+        subtests = {}
+        for row in rows:
+            subtests[row[1]] = row[0]
+        for key in data:
+            self.csr.execute("insert into filesubtest (file, subtest, data, good) values (%(fileid)s, %(subtestid)s, %(data)s, %(good)s)", {"fileid":fileid, "subtestid":subtests[key], "good":data[key][0], "data":data[key][1]})
+            self.conn.commit()
+        
+    def indexpath(self, fileid, path):
+        self.csr.execute("insert into filepaths (fileid, path) values (%(fileid)s, %(path)s)", {"fileid":fileid, "path":path})
         self.conn.commit()
         
         

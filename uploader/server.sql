@@ -55,7 +55,7 @@ CREATE TABLE `endings` (
   `ending` tinytext NOT NULL,
   PRIMARY KEY (`id`),
   KEY `ending` (`ending`(255))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,6 +64,7 @@ CREATE TABLE `endings` (
 
 LOCK TABLES `endings` WRITE;
 /*!40000 ALTER TABLE `endings` DISABLE KEYS */;
+INSERT INTO `endings` VALUES (1,'mts');
 /*!40000 ALTER TABLE `endings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -92,6 +93,30 @@ CREATE TABLE `fileevent` (
 LOCK TABLES `fileevent` WRITE;
 /*!40000 ALTER TABLE `fileevent` DISABLE KEYS */;
 /*!40000 ALTER TABLE `fileevent` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `filepaths`
+--
+
+DROP TABLE IF EXISTS `filepaths`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `filepaths` (
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `fileid` mediumint(8) unsigned NOT NULL,
+  `path` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `filepaths`
+--
+
+LOCK TABLES `filepaths` WRITE;
+/*!40000 ALTER TABLE `filepaths` DISABLE KEYS */;
+/*!40000 ALTER TABLE `filepaths` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -134,7 +159,7 @@ CREATE TABLE `filesubtest` (
   `id` mediumint(9) unsigned NOT NULL AUTO_INCREMENT,
   `file` mediumint(9) unsigned NOT NULL,
   `subtest` smallint(9) unsigned NOT NULL,
-  `data` tinytext NOT NULL,
+  `data` tinytext,
   `good` tinyint(1) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `file` (`file`),
@@ -214,7 +239,7 @@ CREATE TABLE `subtest` (
   `name` tinytext NOT NULL,
   PRIMARY KEY (`id`),
   KEY `test` (`test`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -223,6 +248,7 @@ CREATE TABLE `subtest` (
 
 LOCK TABLES `subtest` WRITE;
 /*!40000 ALTER TABLE `subtest` DISABLE KEYS */;
+INSERT INTO `subtest` VALUES (1,1,'md5'),(2,2,'mp2t');
 /*!40000 ALTER TABLE `subtest` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -239,7 +265,7 @@ CREATE TABLE `testending` (
   `ending` smallint(5) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `test` (`test`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -248,6 +274,7 @@ CREATE TABLE `testending` (
 
 LOCK TABLES `testending` WRITE;
 /*!40000 ALTER TABLE `testending` DISABLE KEYS */;
+INSERT INTO `testending` VALUES (1,1,1),(2,2,1);
 /*!40000 ALTER TABLE `testending` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -262,7 +289,7 @@ CREATE TABLE `tests` (
   `id` smallint(6) unsigned NOT NULL AUTO_INCREMENT,
   `name` tinytext NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -271,6 +298,7 @@ CREATE TABLE `tests` (
 
 LOCK TABLES `tests` WRITE;
 /*!40000 ALTER TABLE `tests` DISABLE KEYS */;
+INSERT INTO `tests` VALUES (1,'md5'),(2,'mp2t');
 /*!40000 ALTER TABLE `tests` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -283,4 +311,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-09-08 16:46:08
+-- Dump completed on 2014-09-18 15:36:20
