@@ -70,9 +70,9 @@ def uphandle(socket, db, log, config):
         raise Exception
     else:
         comlib.sendcom(socket,{"status":"ok"})
-        log.log(3, "file'" + realname + "', id: '" + str(id) + "' received sucessfully")
+        log.log(2, "file'" + realname + "', id: '" + str(id) + "' received sucessfully")
     db.updatefile(id, "md5", md5)    
-    log.log(2, "finished uphandle")
+    log.log(3, "finished uphandle")
 
 def indexhandle(socket, db, log, config):
     log.log(3, "starting indexhandle")
@@ -99,4 +99,18 @@ def indexhandle(socket, db, log, config):
             return
     
     comlib.sendcom(socket, {"status": "ok", "files": filearray})
-    log.log(2, "finished indexhandle")
+    log.log(3, "finished indexhandle")
+
+def correcthandle(socket, db, log, config):
+    log.log(3, "starting correcthandle")
+    com = comlib.recvcom(socket)
+    try:
+        fileid = com["id"]
+        eventids = com["eventids"]
+    except KeyError as err:
+            comlib.sendcom(socket,{"status":"missing key '" + format(err) + "'"})
+            log.log(1, "no key '" + format(err) + "' indexhandle.recive_filearray")
+            return
+    
+    db.setevents(fileid, eventids)
+    log.log(3, "finished correcthandle")
