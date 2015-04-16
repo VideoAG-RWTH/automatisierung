@@ -3,6 +3,7 @@
 #import cgitb
 import json
 import sys
+import os
 
 import conflib
 import dblib
@@ -12,7 +13,7 @@ def getdata():
 #	form = cgi.FieldStorage()
 #	return json.loads(form[key])
 #	return json.loads(sys.argv[1])
-	return json.loads(sys.stdin.read())
+	return json.loads(sys.stdin.read(int(os.environ["CONTENT_LENGTH"])))
 
 class VideoagServer(object):
 	def __init__(self, conffile, data):
@@ -53,6 +54,7 @@ class VideoagServer(object):
 		self.response["result"] = result
 		if rescode != None:
 			print("Status:"+rescode)
-			print()
-		print(json.dumps(self.response))
+		print("Content-Type: text/json")
+		print()
+		print(json.dumps(self.response, indent=2))
 		sys.exit(0)

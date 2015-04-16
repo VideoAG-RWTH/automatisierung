@@ -1,45 +1,77 @@
 #!/usr/bin/env python3
 
-import mysql.connector
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
+
+from models import *
+
+import datetime
+import identify
 
 class DBConn(object):
-	def __init__(self, conf):
-		self.conn = mysql.connector.connect(
-			user=conf["dbuser"],
-			password=conf["dbpass"],
-			host=conf["dbhost"],
-			database=conf["db"]
-			)
-		self.csr = self.conn.cursor()
-		self.uploadid = None
-	
-	def close(self):
-		self.conn.close()
+	def __init__(self, uri):
+		self.engine = create_engine(uri)
+		self.DBSession = sessionmaker(bind=self.engine)
+		self.session = self.DBSession()
+		self.user = None
 	
 	def getuid(self, token):
-		self.csr.execute("select id from auth where token=%(token)s", {"token":token})
-		idrows = self.csr.fetchall()
-		if len(idrows) > 1:
-			raise ValueError("Not at most one row returned, at most one expected.")
-		if len(idrows) < 1:
-			return 0;
-		else:
-			return idrows[0][0]
+		try:
+			self.user = self.session.query(User).filter(User.token == token).one()
+		except NoResultFound:
+			return 0
+		return self.user.id
 	
 	def indexupload(self):
-		self.csr.execute("insert into uploads (id, date) values (id, NOW())")
-		self.uploadid = self.csr.lastrowid
-		return self.uploadid
+		if self.user == None:
+			raise Exception("Only autherized users can index uploads")
+		upload = Upload(user=self.user)
+		self.session.add(upload)
+		return upload
 	
-	def indexfile(self, data):
-		if self.uploadid == None:
-			self.uploadid = self.indexupload()
-		self.csr.execute("""insert into files
-			(uuhash, origname, size, mtime, uploadid)
-			values
-			(%(uuhash)s, %(name)s, %(size)s, FROM_UNIXTIME(%(mtime)s), %(uploadid)s)""",
-			{"uuhash": data["uuhash"], "name":data["filename"], "size":data["size"], "mtime":data["mtime"], "uploadid":self.uploadid})
-		self.conn.commit()
-		fileid = self.csr.lastrowid
-		return fileid
+	def indexfile(self, filedata, upload):
+		if self.session.query(File).filter(File.uuhash==filedata["uuhash"]).count() >0:
+			raise AlreadyExists()
+		f = File(name=filedata["name"], uuhash=filedata["uuhash"], size=filedata["size"], mtime=datetime.datetime.fromtimestamp(filedata["mtime"]), upload=upload)
+		self.session.add(f)
+		return f
 	
+	def getuploadfiles(self, upload):
+		return self.session.query(File).filter(File.upload == upload).all()
+	
+	def identify(self, upload):
+		fileobjs = self.getuploadfiles(upload)
+		files = []
+		for fileobj in fileobjs:
+			f = {}
+			f["obj"] = fileobj
+			f["name"] = fileobj.name
+			f["mtime"] = fileobj.mtime.timestamp()
+			f["size"] = fileobj.size
+			files.append(f)
+		clusters = identify.identify(files)
+		for c in clusters:
+			cobj = Cluster()
+			self.session.add(cobj)
+			for f in c["files"]:
+				fobj = f["obj"]
+				fobj.cluster = cobj
+			for e in c["events"]:
+				self.session.add(Eventconnector(cluster=cobj, event=e["lecture_id"]))
+		
+	
+	def getfile(self, fileid):
+		return self.session.query(Files).filter(File.id == fileid).one()
+	
+	def getunindexed(self, starttime, endtime):
+		pass
+	
+	def getfilestocluster(self, cluster):
+		return self.session.query(File).filter(File.cluster == cluster).all()
+	
+	def commit(self):
+		self.session.commit()
+	
+	def close(self):
+		self.commit()

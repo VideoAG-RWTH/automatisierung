@@ -58,3 +58,9 @@ docs/_build/
 
 # Spyder files
 *.spyderproject
+
+# Vim files
+*.swp
+
+# Databases
+*.db

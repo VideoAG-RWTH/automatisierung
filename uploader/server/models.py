@@ -50,5 +50,7 @@ class Eventconnector(Base):
 	cluster_id = Column(Integer, ForeignKey('clusters.id'), nullable=False)
 	event = Column(Integer, nullable=False)
 	confirmed = Column(Boolean, default=False)
+	
 	relunique = UniqueConstraint('cluster_id', 'event')
+	relunique = UniqueConstraint('cluster_id', 'confirmed')
 

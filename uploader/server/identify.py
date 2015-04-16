@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import json
 import time
 
@@ -83,18 +83,19 @@ def identify(files):
     clusters = findclusters(files)
     for c in clusters:
         c["events"] = clusterevents(events, c)
+    return clusters
     
-    #Covert to another format ;)
-    filearray = []
-    i=0
-    for c in clusters:
-        for f in c["files"]:
-            fevents = []
-            for e in c["events"]:
-                e["id"] = i
-                fevents.append(e)
-            f["events"] = fevents
-            filearray.append(f)
-        i+=1
-    
-    return filearray
+#    #Covert to another format ;)
+#    filearray = []
+#    i=0
+#    for c in clusters:
+#        for f in c["files"]:
+#            fevents = []
+#            for e in c["events"]:
+#                e["id"] = i
+#                fevents.append(e)
+#            f["events"] = fevents
+#            filearray.append(f)
+#        i+=1
+#    
+#    return filearray
