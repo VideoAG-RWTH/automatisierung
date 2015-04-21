@@ -54,16 +54,24 @@ def genlecs(lids):
 		namesuf = str(int(namesuf)+1)
 	return files
 
-def genreq(data):
+def genreq(request, data):
 	req = {}
-	req["request"] = "index"
+	req["request"] = request
 	req["token"] = "aab8d0dc34b59ee9e804f1261a2da9a82feafb64054cd40c4a62fa0767aed228096e558b13452623579208ed33904c6762c4ad625c4e7b25c2b2688e2e5ebb0c"
 	
 	req["data"] = data
 	return req
 
-def genjreq(data):
-	return json.dumps(genreq(data), indent=2)
+def genjreq(request, data):
+	return json.dumps(genreq(request, data), indent=2)
 
 def genlecsreq(lids):
-	return genjreq({"files": genlecs(lids)})
+	return genjreq('index', {"files": genlecs(lids)})
+
+def genunindexed(starttime=None, endtime=None):
+	data = {}
+	if starttime != None:
+		data['starttime'] = starttime
+	if endtime != None:
+		data['endtime'] = endtime
+	return genjreq('getunindexed', data)

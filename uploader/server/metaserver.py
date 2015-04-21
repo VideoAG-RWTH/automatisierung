@@ -2,6 +2,7 @@
 
 #import cgitb
 import time
+import datetime
 
 from vidserver import *
 from models import AlreadyExists
@@ -25,36 +26,44 @@ class VideoagMetaServer(VideoagServer):
 		
 		self.response["data"]["fileids"] = []
 		for f in fileobjs:
-			fileid = fobj.id
+			fileid = f["fileobj"].id
 			self.response["data"]["fileids"].append({"fileid": fileid, "name": f["name"]})
 	
 	def getunindexed(self):
 		try:
-			starttime = self.data["data"]["starttime"]
+			starttime = datetime.datetime.fromtimestamp(self.data["data"]["starttime"])
 		except KeyError:
-			starttime = time.time()-14400
+			starttime = None
 		try:
-			endtime = self.data["data"]["endtime"]
+			endtime = datetime.datetime.fromtimestamp(self.data["data"]["endtime"])
 		except KeyError:
-			endtime = time.time()
+			endtime = None
+		
+		clusters = self.db.getunindexed(starttime, endtime)
 		
 		self.response["data"]["clusters"] = []
-		clusters = db.unindexed(starttime, endtime)
+		
 		for cobj in clusters:
-			c = []
-			for fobj in db.getfilestocluster(cobj):
-				c.append({
-					"id:" fobj.id,
-					"mtime": fobj.mtime.timestamp(),
-					"size": fobj.size
-					"uploadid": fobj.upload.id
-					"uploadtime": fobj.upload.time.timestamp()
-					"uploaduser": fobj.upload.user.name
+			c = {}
+			files = []
+			for fobj in cobj.files:
+				files.append({
+						"id": fobj.id,
+						"mtime": fobj.mtime.timestamp(),
+						"size": fobj.size,
+						"name": fobj.name,
+						"uploadid": fobj.upload.id,
+						"uploadtime": fobj.upload.time.timestamp(),
+						"uploaduser": fobj.upload.user.name
 					})
+			c['files'] = files
+			events = []
+			for eobj in cobj.events:
+				events.append(eobj.event)
+			c['events'] = events
 			
-				
-			
-	
+			self.response["data"]["clusters"].append(c)
+		
 	def handle(self):
 		if self.data["request"] == "index":
 			self.index()

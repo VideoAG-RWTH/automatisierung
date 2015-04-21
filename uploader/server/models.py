@@ -25,9 +25,21 @@ class Upload(Base):
 	user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 	user = relationship(User)
 
+class Eventconnector(Base):
+	__tablename__ = 'fileevents'
+	id = Column(Integer, primary_key=True)
+	cluster_id = Column(Integer, ForeignKey('clusters.id'), nullable=False)
+	#cluster = relationship(Cluster, backref="events")
+	event = Column(Integer, nullable=False)
+	confirmed = Column(Boolean, default=False)
+	
+	relunique = UniqueConstraint('cluster_id', 'event')
+	confunique = UniqueConstraint('cluster_id', 'confirmed')
+
 class Cluster(Base):
 	__tablename__ = 'clusters'
 	id = Column(Integer, primary_key=True)
+	events = relationship(Eventconnector, backref="cluster")
 
 class File(Base):
 	__tablename__ = 'files'
@@ -39,18 +51,7 @@ class File(Base):
 	mtime = Column(DateTime, default=func.now())
 	md5 = Column(String(32), nullable=True, unique=True)
 	upload_id = Column(Integer, ForeignKey('upload.id'), nullable=False)
-	upload = relationship(Upload)
+	upload = relationship(Upload, backref="upload")
 	cluster_id = Column(Integer, ForeignKey('clusters.id'), nullable=True)
-	cluster = relationship(Cluster)
-
-class Eventconnector(Base):
-	__tablename__ = 'fileevents'
-	id = Column(Integer, primary_key=True)
-	cluster = relationship(Cluster)
-	cluster_id = Column(Integer, ForeignKey('clusters.id'), nullable=False)
-	event = Column(Integer, nullable=False)
-	confirmed = Column(Boolean, default=False)
-	
-	relunique = UniqueConstraint('cluster_id', 'event')
-	relunique = UniqueConstraint('cluster_id', 'confirmed')
+	cluster = relationship(Cluster, backref="files")
 

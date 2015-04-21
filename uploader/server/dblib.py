@@ -64,14 +64,22 @@ class DBConn(object):
 	def getfile(self, fileid):
 		return self.session.query(Files).filter(File.id == fileid).one()
 	
-	def getunindexed(self, starttime, endtime):
-		pass
-	
-	def getfilestocluster(self, cluster):
-		return self.session.query(File).filter(File.cluster == cluster).all()
+	def getunindexed(self, starttime=None, endtime=None):
+		if starttime == None:
+			startexp = True
+		else:
+			startexp = starttime>=Upload.time
+		
+		if starttime == None:
+			endexp = True
+		else:
+			endexp = endtime<=Upload.time
+
+		return self.session.query(Cluster).join('events').join('files', 'upload').filter(Eventconnector.confirmed==False, startexp, endexp).all()
 	
 	def commit(self):
 		self.session.commit()
 	
 	def close(self):
 		self.commit()
+
