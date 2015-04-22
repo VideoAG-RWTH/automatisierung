@@ -61,6 +61,7 @@ class VideoagMetaServer(VideoagServer):
 			for eobj in cobj.events:
 				events.append(eobj.event)
 			c['events'] = events
+			c['cluster'] = cobj.id
 			
 			self.response["data"]["clusters"].append(c)
 		
