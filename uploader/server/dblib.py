@@ -62,7 +62,24 @@ class DBConn(object):
 		
 	
 	def getfile(self, fileid):
-		return self.session.query(Files).filter(File.id == fileid).one()
+		return self.session.query(File).filter(File.id == fileid).one()
+	
+	def setevent(self, fobjs, event):
+		cobjs = []
+		newc = Cluster()
+		newe = Eventconnector(event=event, cluster=newc, confirmed=True)
+		self.session.add(newe)
+		self.session.add(newc)
+		for fobj in fobjs:
+			cobj = fobj.cluster
+			fobj.cluster = newc
+			if cobj.files == []:
+				cobjs.append(cobj)
+
+		for cobj in cobjs:
+			for eobj in cobj.events:
+				self.session.delete(eobj)
+			self.session.delete(cobj)
 	
 	def getunindexed(self, starttime=None, endtime=None):
 		if starttime == None:

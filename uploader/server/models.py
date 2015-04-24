@@ -26,7 +26,7 @@ class Upload(Base):
 	user = relationship(User)
 
 class Eventconnector(Base):
-	__tablename__ = 'fileevents'
+	__tablename__ = 'eventconnector'
 	id = Column(Integer, primary_key=True)
 	cluster_id = Column(Integer, ForeignKey('clusters.id'), nullable=False)
 	#cluster = relationship(Cluster, backref="events")

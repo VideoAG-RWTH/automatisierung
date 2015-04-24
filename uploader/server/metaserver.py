@@ -64,11 +64,24 @@ class VideoagMetaServer(VideoagServer):
 			c['cluster'] = cobj.id
 			
 			self.response["data"]["clusters"].append(c)
+	
+	def setevent(self):
+		for cluster in self.data["data"]["clusters"]
+			files = cluster["files"]
+			event = cluster["event"]
 		
+			fobjs = []
+			for f in files:
+				fobjs.append(self.db.getfile(f))
+		
+			db.setevent(fobjs, event)
+	
 	def handle(self):
 		if self.data["request"] == "index":
 			self.index()
 		elif self.data["request"] == "getunindexed":
+			self.getunindexed()
+		elif self.data["request"] == "setevent":
 			self.getunindexed()
 		else:
 			self.error("Unkown Request", "Unknown request " + self.data["request"], "400 Bad Request")
