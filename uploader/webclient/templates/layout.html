@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+	{% block head %}
+	<title>{% block title %}{% endblock %} - EKDVH</title>
+	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}">
+	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='ekdvgkh.css') }}">
+	<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.js') }}"></script>
+	{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-default">
+	<div class="container-fluid">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="{{ url_for('index') }}">eKDV GKH</a>
+	</div>
+	<div id="navbar" class="navbar-collapse collapse">
+		<ul class="nav navbar-nav">
+			<li><a href="{{ url_for('sell') }}">Sachen kaufen</a></li>
+		</ul>
+		<!--
+		<ul class="nav navbar-nav navbar-right">
+			<li><a href="{{ url_for('buy', order=[]) }}">Kaufen</a></li>
+		</ul>
+		-->
+	</div>
+	</div>
+</nav>
+<div class="container-fluid">
+<div class="col-sm-3 col-md-2 sidebar">
+	{% block sidebar %}
+	{% endblock %}
+</div>
+<div class="col-xs-12 col-sm-9">
+	{% block content %}
+	{% endblock %}
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block title %}Sachen kaufen{% endblock %}
+
+{% block sidebar %}
+<ul class="nav nav-sidebar">
+{% for user in users %}
+	<li {% if user==actuser %}class="active"{% endif %}>
+		<a href="{{ url_for('sell', uid=user.id) }}">{{ user.name }}</a>
+	</li>
+{% endfor %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+<div class="row">
+{% if actuser != None %}
+<div class="col-xs-3">
+<h2>Benutzer: {{ actuser.name}}</h2>
+</div>
+<div class="col-xs-3">
+<h2>Guthaben: {{ actuser.saldo }} &euro;</h2>
+</div>
+<div class="col-xs-3">
+<h2>Summe: <span id="saldo">0.00</span> &euro;</h2>
+</div>
+<div class="col-xs-3">
+<a href="javascript:buy()"><h2>KAUFEN</h2></a>
+</div>
+{% else %}
+<center><h2>Willkommen beim eKDVGKH!</h2></center>
+{% endif %}
+</div>
+</div>
+
+<div class="row">
+{% for good in goods %}
+<div class="col-xs-6 col-lg-4">
+{% if actuser != None %}
+<center>
+	<a href="javascript:del('{{ good.id }}')">
+		<h4>Löschen</h4>
+	</a>
+</center>
+{% endif %}
+<a href="javascript:add('{{ good.id }}')"><div class="jumbotron">
+<center>
+	<h3>
+		{{ good.name }}: <span id="price_{{ good.id }}">{{ good.price }}</span> &euro;
+	</h3>
+{% if actuser != None %}
+	<h3>
+		Anzahl: <span id="good_{{ good.id }}">0</span>
+	</h3>
+{% endif %}
+</center>
+</div></a>
+</div>
+{% endfor %}
+</div>
+
+<script language="javascript" type="text/javascript">
+function change(gid, diff) {
+	if ((diff > 0 && document.getElementById("good_" + gid).innerHTML < 20) || (diff < 0 && document.getElementById("good_" + gid).innerHTML > 0)) {
+		document.getElementById("good_" + gid).innerHTML = Number(document.getElementById("good_" + gid).innerHTML)+diff;
+		document.getElementById("saldo").innerHTML = (Number(document.getElementById("saldo").innerHTML) + diff * Number(document.getElementById("price_" + gid).innerHTML)).toFixed(2);
+	}
+}
+function add(gid) { change(gid, 1); }
+function del(gid) { change(gid, -1); }
+function buy() {
+	var req = { };
+	req.goods = { }
+	req.prices = { }
+	{% for good in goods %}
+	req.goods.good_{{ good.id }} = Number(document.getElementById("good_{{ good.id }}").innerHTML);
+	req.prices.good_{{ good.id }} = {{ good.price }};
+	{% endfor %}
+	req.price = Number(document.getElementById("saldo").innerHTML);
+	var jreq = JSON.stringify(req);
+	alert(jreq);
+}
+</script>
+{% endblock %}
