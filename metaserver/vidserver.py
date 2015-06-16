@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-#import cgitb
 import json
 import sys
 import os
@@ -9,15 +8,18 @@ import conflib
 import dblib
 import authlib
 
-def getdata():
-#	form = cgi.FieldStorage()
-#	return json.loads(form[key])
-#	return json.loads(sys.argv[1])
-	return json.loads(sys.stdin.read(int(os.environ["CONTENT_LENGTH"])))
+def getdata(environ):
+	try:
+		length = int(environ.get('CONTENT_LENGTH', '0'))
+	except ValueError:
+		length = 0
+
+	return json.loads(environ['wsgi.input'].read(length))
 
 class VideoagServer(object):
 	def __init__(self, conffile, data):
 		self.response = {"result":"", "data":{}}
+		self.responseheaders = []
 		
 		conf = conflib.loadconfig(conffile)
 		self.db = dblib.DBConn(conf["db"])
@@ -39,22 +41,29 @@ class VideoagServer(object):
 			if not self.authuser():
 				self.error("user auth failed", rescode="403 Forbidden")
 			self.handle()
-			self.end("ok")
+			self.end("ok", "200 OK")
 #		except KeyError as err:
 #			self.error("KeyError", "KeyError: {0}".format(err), "400 Bad Request")
 #		except Exception as err:
 #			self.error("Exception", "Generell Exception: {0}".format(err), "500 Internal Server Error")
 		
-	def error(self, desc, moredesc=None, rescode=None):
+	def error(self, desc, moredesc=None, rescode="500 Internal Server Error"):
 		self.response["data"]["errordesc"] = desc
 		self.response["data"]["moredesc"] = moredesc
 		self.end("error", rescode)
 	
-	def end(self, result, rescode=None):
+	def end(self, result, rescode):
 		self.response["result"] = result
-		if rescode != None:
-			print("Status:"+rescode)
-		print("Content-Type: text/json")
-		print()
-		print(json.dumps(self.response, indent=2))
-		sys.exit(0)
+		resdata = json.dumps(self.response, indent=2)
+		
+		self.responseheaders.append("Content-Type: text/json")
+		self.responseheaders.append("Content-Length: " + str(len(resdata)))
+		
+		start_response(rescode, self.responseheaders)
+		
+		return [resdata]
+
+def application_template(environ, start_response, ServerClass, conf):
+	srv = ServerClass(conf, getdata(environ))
+	srv.serve()
+

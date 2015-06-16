@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-#import cgitb
 import time
 import datetime
 
@@ -85,7 +84,5 @@ class VideoagMetaServer(VideoagServer):
 			self.getunindexed()
 		else:
 			self.error("Unkown Request", "Unknown request " + self.data["request"], "400 Bad Request")
-		
-if __name__ == "__main__":
-	srv = VideoagMetaServer("server.conf", getdata())
-	srv.serve()
+	
+application = lambda environ, start_response: application_template(environ, start_response, VideoagMetaServer, "server.conf")
